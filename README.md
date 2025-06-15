@@ -7,6 +7,7 @@ export REGION="us-central"
 
 # GKE Cluster settings
 export CLUSTER_NAME="mwy-llm-d"
+export GKE_VERSION="1.32.2-gke.1652000"
 
 # GKE Node Pool settings
 export NODEPOOL_NAME="mwy-llm-d-h100"
@@ -25,6 +26,7 @@ export INITIAL_NODES=1
 ```bash
 gcloud beta container --project "$PROJECT_ID" clusters create "$CLUSTER_NAME" \
     --region "$REGION" \
+    --cluster-version="$GKE_VERSION" \
     --enable-dataplane-v2 \
     --enable-dataplane-v2-metrics \
     --enable-dataplane-v2-flow-observability \
