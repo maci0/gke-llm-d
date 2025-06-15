@@ -3,7 +3,7 @@
 ```bash
 # Google Cloud Platform settings
 export PROJECT_ID="gpu-launchpad-playground"
-export REGION="us-central"
+export REGION="us-central1"
 
 # GKE Cluster settings
 export CLUSTER_NAME="mwy-llm-d"
