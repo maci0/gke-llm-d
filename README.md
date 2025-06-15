@@ -143,5 +143,10 @@ subjects:
   kind: ServiceAccount
 EOF
 
-
 ```
+
+## Install llm-d expample workload
+```
+./llmd-installer.sh -m --values-file ./examples/base.yaml
+```
+
