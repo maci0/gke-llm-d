@@ -9,6 +9,7 @@ export REGION="us-central1"
 export CLUSTER_NAME="mwy-llm-d"
 
 # GKE Node Pool settings
+export NODE_LOCATIONS="us-central1-a,us-central1-b,us-central1-c"
 export NODEPOOL_NAME="mwy-llm-d-h100"
 export MACHINE_TYPE="a3-highgpu-1g"
 export GPU_TYPE="nvidia-h100-80gb"
@@ -42,6 +43,7 @@ gcloud beta container --project "$PROJECT_ID" clusters create "$CLUSTER_NAME" \
 gcloud beta container --project "$PROJECT_ID" node-pools create "$NODEPOOL_NAME" \
     --cluster "$CLUSTER_NAME" \
     --region "$REGION" \
+    --node-locations "$NODE_LOCATIONS" \
     --machine-type "$MACHINE_TYPE" \
     --accelerator "type=$GPU_TYPE,count=$GPU_COUNT,gpu-driver-version=$GPU_DRIVER_VERSION" \
     --num-nodes "$INITIAL_NODES" \
