@@ -7,7 +7,6 @@ export REGION="us-central1"
 
 # GKE Cluster settings
 export CLUSTER_NAME="mwy-llm-d"
-export GKE_VERSION="1.32.2-gke.1652000"
 
 # GKE Node Pool settings
 export NODEPOOL_NAME="mwy-llm-d-h100"
