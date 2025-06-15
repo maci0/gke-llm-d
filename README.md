@@ -10,8 +10,11 @@ gcloud beta container --project "gpu-launchpad-playground" clusters create "mwy-
 git clone https://github.com/llm-d/llm-d-deployer.git
 cd llm-d-deployer/quickstart
 ./install-deps.sh
+```
 
-
+## Set up Huggingface token environment variable
+```bash
+export HF_TOKEN=${INSERT YOUR TOKEN HERE}
 ```
 
 ## Set up GKE Inference Gateway
