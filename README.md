@@ -17,4 +17,6 @@ cd llm-d-deployer/quickstart
 export HF_TOKEN=${INSERT YOUR TOKEN HERE}
 ```
 
+Make sure you have requested access to the https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct model.
+
 ## Set up GKE Inference Gateway
