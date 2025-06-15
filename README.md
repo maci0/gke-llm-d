@@ -71,3 +71,77 @@ export HF_TOKEN=${INSERT YOUR TOKEN HERE}
 Make sure you have requested access to the https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct model.
 
 ## Set up GKE Inference Gateway
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api-inference-extension/releases/download/v0.3.0/manifests.yaml
+
+
+# Set up authorization for the metrics scraper
+kubectl apply -f - <<EOF
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: inference-gateway-metrics-reader
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: inference-gateway-sa-metrics-reader
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: inference-gateway-sa-metrics-reader-role-binding
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: inference-gateway-sa-metrics-reader
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: inference-gateway-metrics-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: inference-gateway-sa-metrics-reader-secret
+  namespace: default
+  annotations:
+    kubernetes.io/service-account.name: inference-gateway-sa-metrics-reader
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: inference-gateway-sa-metrics-reader-secret-read
+rules:
+- resources:
+  - secrets
+  apiGroups: [""]
+  verbs: ["get", "list", "watch"]
+  resourceNames: ["inference-gateway-sa-metrics-reader-secret"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gmp-system:collector:inference-gateway-sa-metrics-reader-secret-read
+  namespace: default
+roleRef:
+  name: inference-gateway-sa-metrics-reader-secret-read
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- name: collector
+  namespace: gmp-system
+  kind: ServiceAccount
+EOF
+
+
+```
