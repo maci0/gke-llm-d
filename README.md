@@ -3,13 +3,13 @@
 ```bash
 # Google Cloud Platform settings
 export PROJECT_ID="gpu-launchpad-playground"
-export REGION="us-east4"
+export REGION="us-central1"
 
 # GKE Cluster settings
 export CLUSTER_NAME="mwy-llm-d"
 
 # GKE Node Pool settings
-export NODE_LOCATIONS="us-east4-b"
+export NODE_LOCATIONS="us-central1-a,us-central1-b,us-central1-c"
 export NODEPOOL_NAME="mwy-llm-d-h100"
 export MACHINE_TYPE="g2-standard-4"
 export GPU_TYPE="nvidia-l4"
