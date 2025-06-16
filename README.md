@@ -10,7 +10,7 @@ export CLUSTER_NAME="mwy-llm-d"
 
 # GKE Node Pool settings
 export NODE_LOCATIONS="us-central1-a,us-central1-b,us-central1-c"
-export NODEPOOL_NAME="mwy-llm-d-h100"
+export NODEPOOL_NAME="mwy-llm-d-l4"
 export MACHINE_TYPE="g2-standard-4"
 export GPU_TYPE="nvidia-l4"
 export GPU_COUNT=2 # Number of GPUs to attach per VM
