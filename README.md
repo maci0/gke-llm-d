@@ -157,6 +157,10 @@ sampleApplication:
   model:
     modelArtifactURI: hf://meta-llama/Llama-3.2-3B-Instruct
     modelName: "meta-llama/Llama-3.2-3B-Instruct"
+  container:
+    env:
+      - name: FOO
+        value: "BAR"
 redis:
   enabled: false
 modelservice:
@@ -182,15 +186,20 @@ modelservice:
         value: "false"
       - name: PREFILL_ENABLE_SESSION_AWARE_SCORER
         value: "false"
+    metrics:
+      enabled: false
+  metrics:
+    enabled: false
+  vllm:
+    metrics:
+      enabled: false
 EOF
+
 ```
 
 ## Install llm-d expample workload
 ```bash
 helm install llm-d llm-d/llm-d -f llm-d-gke.yaml \
-    --set modelservice.metrics.enabled=false \
-    --set modelservice.epp.metrics.enabled=false \
-    --set modelservice.vllm.metrics.enabled=false \
     --set sampleApplication.container.env[0].name="FOO" \
     --set sampleApplication.container.env[0].value="BAR"
 ```
