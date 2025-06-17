@@ -71,8 +71,8 @@ helm repo add istio https://istio-release.storage.googleapis.com/charts
 
 helm repo update
 
-helm upgrade -i istio-base base --version 1.26.1 -n istio-system --create-namespace
-helm upgrade -i istiod istiod --version 1.26.1 -n istio-system --wait
+helm upgrade -i istio-base istio/base --version 1.26.1 -n istio-system --create-namespace
+helm upgrade -i istiod istio/istiod --version 1.26.1 -n istio-system --wait
 
 ```
 
