@@ -212,6 +212,12 @@ EOF
 
 ```
 
+## Create huggingface token secret
+```bash
+kubectl create secret generic llm-d-hf-token \
+    --from-literal="HF_TOKEN=${HF_TOKEN}"
+```
+
 ## Install llm-d expample workload
 ```bash
 helm install llm-d llm-d/llm-d -f llm-d-gke.yaml 
