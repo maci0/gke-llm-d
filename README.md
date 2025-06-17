@@ -157,10 +157,6 @@ sampleApplication:
   model:
     modelArtifactURI: hf://meta-llama/Llama-3.2-3B-Instruct
     modelName: "meta-llama/Llama-3.2-3B-Instruct"
-  container:
-    env:
-      - name: FOO
-        value: "BAR"
 redis:
   enabled: false
 modelservice:
@@ -191,6 +187,7 @@ modelservice:
   metrics:
     enabled: false
   vllm:
+    image: vllm/vllm-openai:v0.9.1
     metrics:
       enabled: false
 EOF
