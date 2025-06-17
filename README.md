@@ -157,6 +157,9 @@ sampleApplication:
 redis:
   enabled: false
 modelservice:
+  metrics.enabled: false
+  epp.metrics.enabled: false
+  vllm.metrics.enabled: false
   epp:
     defaultEnvVarsOverride:
       - name: ENABLE_KVCACHE_AWARE_SCORER
@@ -181,7 +184,6 @@ modelservice:
         value: "false"
 EOF
 ```
-
 
 ## Install llm-d expample workload
 ```
