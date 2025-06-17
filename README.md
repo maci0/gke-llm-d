@@ -62,6 +62,9 @@ gcloud beta container --project "$PROJECT_ID" node-pools create "$NODEPOOL_NAME"
 git clone https://github.com/llm-d/llm-d-deployer.git
 cd llm-d-deployer/quickstart
 ./install-deps.sh
+
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add llm-d https://llm-d.ai/llm-d-deployer
 ```
 
 ## Set up Huggingface token environment variable
@@ -190,9 +193,6 @@ EOF
 
 ## Install llm-d expample workload
 ```bash
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo add llm-d https://llm-d.ai/llm-d-deployer
-
-helm install my-llm-d llm-d/llm-d
+helm install llm-d llm-d/llm-d -f llm-d-gke.yaml
 ```
 
