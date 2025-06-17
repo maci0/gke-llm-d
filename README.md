@@ -196,8 +196,6 @@ EOF
 
 ## Install llm-d expample workload
 ```bash
-helm install llm-d llm-d/llm-d -f llm-d-gke.yaml \
-    --set sampleApplication.container.env[0].name="FOO" \
-    --set sampleApplication.container.env[0].value="BAR"
+helm install llm-d llm-d/llm-d -f llm-d-gke.yaml 
 ```
 
