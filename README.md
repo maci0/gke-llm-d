@@ -67,6 +67,13 @@ cd llm-d-deployer/quickstart
 
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo add llm-d https://llm-d.ai/llm-d-deployer
+helm repo add istio https://istio-release.storage.googleapis.com/charts
+
+helm repo update
+
+helm upgrade -i istio-base base --version 1.26.1 -n istio-system --create-namespace
+helm upgrade -i istiod istiod --version 1.26.1 -n istio-system --wait
+
 ```
 
 ## Set up Huggingface token environment variable
@@ -149,11 +156,6 @@ subjects:
   kind: ServiceAccount
 EOF
 
-```
-
-## Install more prereqs
-```bash
-./llmd-installer.sh -e -m
 ```
 
 ## Configure llm-d
