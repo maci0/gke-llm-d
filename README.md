@@ -233,3 +233,42 @@ kubectl patch ModelService meta-llama-llama-3-2-3b-instruct --type='json' -p='[{
 ```
 ## Notes
 Might have to edit the ModelService and add `--gpu-memory-utilization 0.95` to vllm startup options or reduce the context window with like so `--max-model-len 65536`
+
+Might also still have to do some more work 
+```
+kind: HealthCheckPolicy
+apiVersion: networking.gke.io/v1
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gateway-api-inference-extension.labels" . | nindent 4 }}
+spec:
+  targetRef:
+    group: "inference.networking.x-k8s.io"
+    kind: InferencePool
+    name: {{ .Release.Name }}
+  default:
+    config:
+      type: HTTP
+      httpHealthCheck:
+          requestPath: /health
+          port:  {{ .Values.inferencePool.targetPortNumber }}
+---
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gateway-api-inference-extension.labels" . | nindent 4 }}
+spec:
+  targetRef:
+    group: "inference.networking.x-k8s.io"
+    kind: InferencePool
+    name: {{ .Release.Name }}
+  default:
+    timeoutSec: 300    # 5-minute timeout (adjust as needed)
+    logging:
+      enabled: true    # log all requests by default
+```
