@@ -154,18 +154,12 @@ EOF
 cat <<'EOF' > llm-d-gke.yaml
 sampleApplication:
   baseConfigMapRefName: basic-gpu-preset
-  containers.env:
-    - name: FOO
-      value: "BAR"
   model:
     modelArtifactURI: hf://meta-llama/Llama-3.2-3B-Instruct
     modelName: "meta-llama/Llama-3.2-3B-Instruct"
 redis:
   enabled: false
 modelservice:
-  metrics.enabled: false
-  epp.metrics.enabled: false
-  vllm.metrics.enabled: false
   epp:
     defaultEnvVarsOverride:
       - name: ENABLE_KVCACHE_AWARE_SCORER
@@ -193,6 +187,11 @@ EOF
 
 ## Install llm-d expample workload
 ```bash
-helm install llm-d llm-d/llm-d -f llm-d-gke.yaml
+helm install llm-d llm-d/llm-d -f llm-d-gke.yaml \
+    --set modelservice.metrics.enabled=false \
+    --set modelservice.epp.metrics.enabled=false \
+    --set modelservice.vllm.metrics.enabled=false \
+    --set sampleApplication.container.env[0].name="FOO" \
+    --set sampleApplication.container.env[0].value="BAR"
 ```
 
