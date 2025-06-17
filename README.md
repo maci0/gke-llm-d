@@ -147,7 +147,7 @@ EOF
 ```
 
 ## Configure llm-d
-```
+```bash
 cat <<'EOF' > llm-d-gke.yaml
 sampleApplication:
   baseConfigMapRefName: basic-gpu-preset
@@ -186,7 +186,10 @@ EOF
 ```
 
 ## Install llm-d expample workload
-```
-./llmd-installer.sh -m --values-file ./examples/base.yaml
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add llm-d https://llm-d.ai/llm-d-deployer
+
+helm install my-llm-d llm-d/llm-d
 ```
 
