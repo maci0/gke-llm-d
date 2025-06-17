@@ -232,7 +232,32 @@ kubectl patch ModelService meta-llama-llama-3-2-3b-instruct --type='json' -p='[{
 kubectl patch ModelService meta-llama-llama-3-2-3b-instruct --type='json' -p='[{"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
 ```
 ## Notes
-Might have to edit the ModelService and add `--gpu-memory-utilization 0.95` to vllm startup options or reduce the context window with like so `--max-model-len 65536`
+On L4 GPUs probably have to edit the ModelService and add `--gpu-memory-utilization 0.95` to vllm startup options or reduce the context window with like so `--max-model-len 65536`
+
+## Testing
+More work to be done here:
+```bash
+./test-request.sh -n default
+Namespace: default
+Model ID:  none; will be discover from first entry in /v1/models
+
+1 -> Fetching available models from the decode pod at 10.108.10.7…
+{"object":"list","data":[{"id":"meta-llama/Llama-3.2-3B-Instruct","object":"model","created":1750151405,"owned_by":"vllm","root":"meta-llama/Llama-3.2-3B-Instruct","parent":null,"max_model_len":65536,"permission":[{"id":"modelperm-19c52767f53248dd832d8bef1da798d2","object":"model_permission","created":1750151405,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-852" deleted
+
+Discovered model to use: meta-llama/Llama-3.2-3B-Instruct
+
+2 -> Sending a completion request to the decode pod at 10.108.10.7…
+If you don't see a command prompt, try pressing enter.
+warning: couldn't attach to pod/curl-1536, falling back to streaming logs: Internal error occurred: unable to upgrade connection: container curl-1536 not found in pod curl-1536_default
+{"id":"cmpl-c63e44d7d17e4d27aced5e324289f28b","object":"text_completion","created":1750151408,"model":"meta-llama/Llama-3.2-3B-Instruct","choices":[{"index":0,"text":" (A question for the ages)\nI am a being of words, a we","logprobs":null,"finish_reason":"length","stop_reason":null,"prompt_logprobs":null}],"usage":{"prompt_tokens":5,"total_tokens":21,"completion_tokens":16,"prompt_tokens_details":null},"kv_transfer_params":null}pod "curl-1536" deleted
+
+3 -> Fetching available models via the gateway at llm-d-inference-gateway-istio.default.svc.cluster.local…
+pod "curl-8814" deleted
+
+Error: model 'meta-llama/Llama-3.2-3B-Instruct' not available via gateway:
+```
+
+
 
 Might also still have to do some more work 
 ```
