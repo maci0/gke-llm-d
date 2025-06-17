@@ -151,6 +151,9 @@ EOF
 cat <<'EOF' > llm-d-gke.yaml
 sampleApplication:
   baseConfigMapRefName: basic-gpu-preset
+  containers.env:
+    - name: FOO
+      value: "BAR"
   model:
     modelArtifactURI: hf://meta-llama/Llama-3.2-3B-Instruct
     modelName: "meta-llama/Llama-3.2-3B-Instruct"
