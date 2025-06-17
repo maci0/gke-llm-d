@@ -149,6 +149,11 @@ EOF
 
 ```
 
+## Install more prereqs
+```bash
+./llmd-installer.sh -e -m
+```
+
 ## Configure llm-d
 ```bash
 cat <<'EOF' > llm-d-gke.yaml
