@@ -187,9 +187,18 @@ modelservice:
   metrics:
     enabled: false
   vllm:
-    image: vllm/vllm-openai:v0.9.1
     metrics:
       enabled: false
+    image:
+
+      # -- llm-d image registry
+      registry: registry.hub.docker.com
+
+      # -- llm-d image repository
+      repository: vllm/vllm-openai
+
+      # -- llm-d image tag
+      tag: v0.9.1
 EOF
 
 ```
