@@ -27,6 +27,8 @@ export INITIAL_NODES=1
 gcloud beta container --project "$PROJECT_ID" clusters create "$CLUSTER_NAME" \
     --region "$REGION" \
     --cluster-version="$GKE_VERSION" \
+    --machine-type=e2-standard-4 \
+    --num-nodes=1 \ 
     --enable-dataplane-v2 \
     --enable-dataplane-v2-metrics \
     --enable-dataplane-v2-flow-observability \
