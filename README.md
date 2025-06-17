@@ -36,7 +36,8 @@ gcloud beta container --project "$PROJECT_ID" clusters create "$CLUSTER_NAME" \
     --enable-shielded-nodes \
     --shielded-integrity-monitoring \
     --no-shielded-secure-boot \
-    --enable-multi-networking
+    --enable-multi-networking \
+    --gateway-api=standard
 ```
 ## Create GPU Nodepool
 ```bash
