@@ -390,7 +390,7 @@ kubectl apply -f - <<EOF
 apiVersion: llm-d.ai/v1alpha1
 kind: ModelService
 metadata:
-  name: qwen3-0-6B
+  name: qwen3-0-6b
 spec:
   modelArtifacts:
     uri: hf://Qwen/Qwen3-0.6B
@@ -438,7 +438,7 @@ kubectl apply -f - <<EOF
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: qwen3-0-6B-gateway
+  name: qwen3-0-6b-gateway
 spec:
   gatewayClassName: gke-l7-rilb
   listeners:
@@ -449,24 +449,24 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: qwen3-0-6B-route
+  name: qwen3-0-6b-route
 spec:
   parentRefs:
-  - name: qwen3-0-6B-gateway
+  - name: qwen3-0-6b-gateway
   rules:
   - matches:
     - path:
         type: PathPrefix
         value: /
     backendRefs:
-    - name: qwen3-0-6B-inference-pool
+    - name: qwen3-0-6b-inference-pool
       group: inference.networking.x-k8s.io
       kind: InferencePool
 ---
 apiVersion: networking.gke.io/v1
 kind: GCPBackendPolicy
 metadata:
-  name: qwen3-0-6B-backend-policy
+  name: qwen3-0-6b-backend-policy
   namespace: default
 spec:
   default:
@@ -476,18 +476,18 @@ spec:
   targetRef:
     group: inference.networking.x-k8s.io
     kind: InferencePool
-    name: qwen3-0-6B-inference-pool
+    name: qwen3-0-6b-inference-pool
 ---
 kind: HealthCheckPolicy
 apiVersion: networking.gke.io/v1
 metadata:
-  name: qwen3-0-6B-health-check-policy
+  name: qwen3-0-6b-health-check-policy
   namespace: default
 spec:
   targetRef:
     group: "inference.networking.x-k8s.io"
     kind: InferencePool
-    name: qwen3-0-6B-inference-pool
+    name: qwen3-0-6b-inference-pool
   default:
     config:
       type: HTTP
