@@ -299,3 +299,8 @@ spec:
     logging:
       enabled: true    # log all requests by default
 ```
+
+## Cleanup
+```bash
+gcloud container clusters delete mwy-llm-d --region us-central1
+```
