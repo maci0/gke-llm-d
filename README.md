@@ -425,8 +425,8 @@ spec:
         requests:
           nvidia.com/gpu: "1"
       args:
-      - "--model"
-      - "Qwen/Qwen3-0.6B"
+      - "--served-model-name"
+      - "qwen3-0-6b"
       env:
       - name: HF_TOKEN
         valueFrom:
@@ -447,8 +447,8 @@ spec:
         requests:
           nvidia.com/gpu: "1"
       args:
-      - "--model"
-      - "Qwen/Qwen3-0.6B"
+      - "--served-model-name"
+      - "qwen3-0-6b"
       env:
       - name: HF_TOKEN
         valueFrom:
