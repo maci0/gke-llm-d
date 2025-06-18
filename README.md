@@ -332,6 +332,49 @@ spec:
       enabled: true    # log all requests by default
 ```
 
+##
+```
+cat <<'EOF' | kubectl apply -f -
+kind: HealthCheckPolicy
+apiVersion: networking.gke.io/v1
+metadata:
+  name: llm-d-healthcheck-policy # Use a distinct name
+  namespace: default # Ensure this matches your llm-d deployment namespace
+spec:
+  targetRef:
+    group: "inference.networking.x-k8s.io"
+    kind: InferencePool
+    # The name of the InferencePool is usually derived from the KServe InferenceService or ModelService name.
+    # It often follows a pattern like `kserve-<model-service-name>`.
+    # Let's verify the InferencePool name after llm-d is deployed.
+    # For now, let's assume it matches the llm-d Helm release name for simplicity, but you might need to adjust this.
+    name: llama3-inference-pool # This might need to be adjusted to the actual InferencePool name (e.g., kserve-meta-llama-llama-3-2-3b-instruct)
+  default:
+    config:
+      type: HTTP
+      httpHealthCheck:
+          # llm-d's VLLM endpoint typically exposes health on /health
+          requestPath: /health
+          port:  8000 # Default VLLM port, adjust if llm-d uses a different internal port
+---
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: llm-d-backend-policy # Use a distinct name
+  namespace: default # Ensure this matches your llm-d deployment namespace
+spec:
+  targetRef:
+    group: "inference.networking.x-k8s.io"
+    kind: InferencePool
+    # As above, verify and adjust the name if needed.
+    name: llm-d # This might need to be adjusted
+  default:
+    timeoutSec: 300    # 5-minute timeout (adjust as needed for long inference)
+    logging:
+      enabled: true    # log all requests by default
+EOF
+```
+
 ## Cleanup
 ```bash
 gcloud container clusters delete mwy-llm-d --region us-central1
