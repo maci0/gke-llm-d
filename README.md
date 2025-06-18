@@ -414,7 +414,7 @@ spec:
   baseConfigMapRef:
     name: basic-gpu-preset
   routing:
-    modelName: Qwen3-0.6B
+    modelName: qwen3-0-6b
   decode:
     replicas: 1
     containers:
