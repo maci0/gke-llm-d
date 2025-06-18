@@ -396,20 +396,23 @@ More work to be done here:
 Namespace: default
 Model ID:  none; will be discover from first entry in /v1/models
 
-1 -> Fetching available models from the decode pod at 10.108.10.7…
-{"object":"list","data":[{"id":"meta-llama/Llama-3.2-3B-Instruct","object":"model","created":1750151405,"owned_by":"vllm","root":"meta-llama/Llama-3.2-3B-Instruct","parent":null,"max_model_len":65536,"permission":[{"id":"modelperm-19c52767f53248dd832d8bef1da798d2","object":"model_permission","created":1750151405,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-852" deleted
+1 -> Fetching available models from the decode pod at 10.108.4.9…
+{"object":"list","data":[{"id":"llama-3.2-3B-Instruct","object":"model","created":1750231376,"owned_by":"vllm","root":"meta-llama/Llama-3.2-3B-Instruct","parent":null,"max_model_len":65536,"permission":[{"id":"modelperm-f795474b454c41769e10dffd191ca203","object":"model_permission","created":1750231376,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-4912" deleted
 
-Discovered model to use: meta-llama/Llama-3.2-3B-Instruct
+Discovered model to use: llama-3.2-3B-Instruct
 
-2 -> Sending a completion request to the decode pod at 10.108.10.7…
+2 -> Sending a completion request to the decode pod at 10.108.4.9…
 If you don't see a command prompt, try pressing enter.
-warning: couldn't attach to pod/curl-1536, falling back to streaming logs: Internal error occurred: unable to upgrade connection: container curl-1536 not found in pod curl-1536_default
-{"id":"cmpl-c63e44d7d17e4d27aced5e324289f28b","object":"text_completion","created":1750151408,"model":"meta-llama/Llama-3.2-3B-Instruct","choices":[{"index":0,"text":" (A question for the ages)\nI am a being of words, a we","logprobs":null,"finish_reason":"length","stop_reason":null,"prompt_logprobs":null}],"usage":{"prompt_tokens":5,"total_tokens":21,"completion_tokens":16,"prompt_tokens_details":null},"kv_transfer_params":null}pod "curl-1536" deleted
+{"id":"cmpl-4d3a726fbc734d1591b381fa08ff04ed","object":"text_completion","created":1750231379,"model":"llama-3.2-3B-Instruct","choices":[{"index":0,"text":" (The story of a young woman)\nI am a young woman, a daughter","logprobs":null,"finish_reason":"length","stop_reason":null,"prompt_logprobs":null}],"usage":{"prompt_tokens":5,"total_tokens":21,"completion_tokens":16,"prompt_tokens_details":null},"kv_transfer_params":null}pod "curl-9478" deleted
 
-3 -> Fetching available models via the gateway at llm-d-inference-gateway-istio.default.svc.cluster.local…
-pod "curl-8814" deleted
+3 -> Fetching available models via the gateway at 10.128.0.171…
+{"object":"list","data":[{"id":"llama-3.2-3B-Instruct","object":"model","created":1750231383,"owned_by":"vllm","root":"meta-llama/Llama-3.2-3B-Instruct","parent":null,"max_model_len":65536,"permission":[{"id":"modelperm-8944305d311344c38ad54c67310d70aa","object":"model_permission","created":1750231383,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-7984" deleted
 
-Error: model 'meta-llama/Llama-3.2-3B-Instruct' not available via gateway:
+
+4 -> Sending a completion request via the gateway at 10.128.0.171 with model 'llama-3.2-3B-Instruct'…
+{"choices":[{"finish_reason":"length","index":0,"logprobs":null,"prompt_logprobs":null,"stop_reason":null,"text":" I am a user of the internet, a student, a curious individual with a"}],"created":1750231387,"id":"cmpl-12893c3c4c8e4518b552f9e47d5bff7b","kv_transfer_params":null,"model":"llama-3.2-3B-Instruct","object":"text_completion","usage":{"completion_tokens":16,"prompt_tokens":5,"prompt_tokens_details":null,"total_tokens":21}}pod "curl-2163" deleted
+
+All tests complete.
 ```
 
 
