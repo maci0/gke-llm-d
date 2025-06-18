@@ -373,11 +373,12 @@ curl -i -X POST ${IP}:${PORT}/v1/completions \
 }'
 ```
 
-11. Cleanup
+## 11. Cleanup
 To remove all the resources created in this guide, delete the GKE cluster.
 ```bash
 gcloud container clusters delete "$CLUSTER_NAME" --region "$REGION"
 ```
+
 
 
 ## Add another ModelService
