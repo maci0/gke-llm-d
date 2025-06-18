@@ -419,6 +419,11 @@ spec:
     replicas: 1
     containers:
     - name: "vllm"
+    resources:
+      limits:
+        nvidia.com/gpu: "1"
+      requests:
+        nvidia.com/gpu: "1"
       args:
       - "--model"
       - "Qwen/Qwen3-0.6B"
@@ -436,6 +441,11 @@ spec:
     replicas: 1
     containers:
     - name: "vllm"
+    resources:
+      limits:
+        nvidia.com/gpu: "1"
+      requests:
+        nvidia.com/gpu: "1"
       args:
       - "--model"
       - "Qwen/Qwen3-0.6B"
