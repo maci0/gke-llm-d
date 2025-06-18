@@ -184,22 +184,13 @@ modelservice:
         value: "false"
       - name: PREFILL_ENABLE_SESSION_AWARE_SCORER
         value: "false"
-    metrics:
-      enabled: false
   metrics:
     enabled: false
   vllm:
-    metrics:
-      enabled: false
+    enabled: true
     #image:
-
-      # -- llm-d image registry
-     # registry: registry.hub.docker.com
-
-      # -- llm-d image repository
+      #registry: registry.hub.docker.com
       #repository: vllm/vllm-openai
-
-      # -- llm-d image tag
       #tag: v0.9.1
 EOF
 
