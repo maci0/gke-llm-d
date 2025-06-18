@@ -12,14 +12,14 @@ Before you begin, ensure you have the following:
 ## 2. Environment Configuration
 First, set up the environment variables that will be used throughout the deployment process.
 ```bash
-# Google Cloud Platform settings
+# --- Google Cloud Platform Settings ---
 export PROJECT_ID="gpu-launchpad-playground"
 export REGION="us-central1"
 
-# GKE Cluster settings
+# --- GKE Cluster Settings ---
 export CLUSTER_NAME="mwy-llm-d"
 
-# GKE Node Pool settings
+# --- GKE Node Pool Settings ---
 export NODE_LOCATIONS="us-central1-a,us-central1-b,us-central1-c"
 export NODEPOOL_NAME="mwy-llm-d-l4"
 export MACHINE_TYPE="g2-standard-8"
@@ -27,10 +27,16 @@ export GPU_TYPE="nvidia-l4"
 export GPU_COUNT=1 # Number of GPUs to attach per VM
 export GPU_DRIVER_VERSION="latest" # Use "latest" or a specific version
 
-# Nodepool Autoscaling settings
+# --- Nodepool Autoscaling Settings ---
 export MIN_NODES=0
 export MAX_NODES=4
 export INITIAL_NODES=1
+```
+Also set your huggingface token.
+```bash
+# --- Hugging Face Token ---
+# Replace with your actual Hugging Face token
+export HF_TOKEN="<INSERT YOUR TOKEN HERE>"
 ```
 
 ## Create Cluster
