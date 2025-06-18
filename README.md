@@ -246,6 +246,38 @@ helm install llm-d-sample llm-d/llm-d -f llm-d-sample.yaml
 
 ```
 
+## Create gateway and route
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: meta-llama-llama-3-2-3b-instruct-gateway
+spec:
+  gatewayClassName: gke-l7-rilb
+  listeners:
+    - protocol: HTTP # Or HTTPS for production
+      port: 80 # Or 443 for HTTPS
+      name: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: meta-llama-llama-3-2-3b-instruct-route
+spec:
+  parentRefs:
+  - name: meta-llama-llama-3-2-3b-instruct-gateway
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: meta-llama-llama-3-2-3b-instruct-inference-pool
+      group: inference.networking.x-k8s.io
+      kind: InferencePool
+```
+
 ## install example workload
 ```yaml
 kubectl apply -f - <<EOF
