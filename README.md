@@ -177,6 +177,12 @@ gateway:
 redis:
   enabled: true
 modelservice:
+  vllm:
+    enabled: true
+    #image:
+      #registry: registry.hub.docker.com
+      #repository: vllm/vllm-openai
+      #tag: v0.9.1
   epp:
     defaultEnvVarsOverride:
       - name: ENABLE_KVCACHE_AWARE_SCORER
@@ -201,12 +207,7 @@ modelservice:
         value: "true"
   metrics:
     enabled: false
-  vllm:
-    enabled: true
-    #image:
-      #registry: registry.hub.docker.com
-      #repository: vllm/vllm-openai
-      #tag: v0.9.1
+
 EOF
 ```
 
