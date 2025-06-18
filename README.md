@@ -92,8 +92,8 @@ helm repo add llm-d https://llm-d.ai/llm-d-deployer
 helm repo update
 ```
 
-## 5. Kubernetes Configuration ( Optional )
-Create Hugging Face Token Secret
+## 5. Kubernetes Configuration
+### Create Hugging Face Token Secret ( Optional )
 Create a Kubernetes secret to securely store your Hugging Face token. This will be used by `llm-d` to download the model.
 You can skip this step if you're using the SampleApplication chart from the `llm-d-deployer` repo.
 ```bash
@@ -192,13 +192,13 @@ modelservice:
       - name: PD_PROMPT_LEN_THRESHOLD
         value: "10"
       - name: PREFILL_ENABLE_KVCACHE_AWARE_SCORER
-        value: "false"
+        value: "true"
       - name: PREFILL_ENABLE_LOAD_AWARE_SCORER
         value: "false"
       - name: PREFILL_ENABLE_PREFIX_AWARE_SCORER
-        value: "false"
+        value: "true"
       - name: PREFILL_ENABLE_SESSION_AWARE_SCORER
-        value: "false"
+        value: "true"
   metrics:
     enabled: false
   vllm:
@@ -212,6 +212,8 @@ EOF
 
 ### Configure the llm-d Sample Application
 This configuration defines the model that will be deployed.
+We are using the `basic-gpu-preset` base configmap.
+You can view it running `kubectl get cm basic-gpu-preset -o yaml`
 ```bash
 cat <<'EOF' > llm-d-sample.yaml
 sampleApplication:
