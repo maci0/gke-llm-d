@@ -251,7 +251,7 @@ kind: Gateway
 metadata:
   name: llama-3-2-3b-instruct-gateway
 spec:
-  gatewayClassName: gke-l7-regional-external-managed
+  gatewayClassName: gke-l7-rilb
   listeners:
     - protocol: HTTP # Or HTTPS for production
       port: 80 # Or 443 for HTTPS
