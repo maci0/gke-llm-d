@@ -525,3 +525,27 @@ EOF
 ## TODO
 * GMP Monitoring
 * Helm integration for `HealthCheckPolicy`, `Gateway`, `GCPBackendPolicy`, `HTTPRoute`
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: monitoring.googleapis.com/v1
+kind: ClusterPodMonitoring
+metadata:
+  name: llm-d-cpm
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: llm-d
+  endpoints:
+  - port: metrics
+    scheme: http
+    interval: 5s
+    path: /metrics
+    authorization:
+      type: Bearer
+      credentials:
+        secret:
+          name: inference-gateway-sa-metrics-reader-secret
+          key: token
+EOF
+```
