@@ -7,7 +7,7 @@ Before you begin, ensure you have the following:
 * kubectl: The Kubernetes command-line tool.
 * Helm: The package manager for Kubernetes.
 * Hugging Face Account: You will need an account and an access token.
-* Model Access: Request access to the meta-llama/Llama-3.2-8B-Instruct model on Hugging Face.
+* Model Access: Request access to the meta-llama/Llama-3.2-1B-Instruct model on Hugging Face.
 
 ## 2. Environment Configuration
 First, set up the environment variables that will be used throughout the deployment process.
@@ -39,7 +39,11 @@ Also set your huggingface token.
 export HF_TOKEN="<INSERT YOUR TOKEN HERE>"
 ```
 
-## Create Cluster
+## 3. Infrastructure Setup
+Next, create the GKE cluster and a dedicated GPU node pool.
+
+### Create the GKE Cluster
+This command creates a standard GKE cluster that will host the control plane and other supporting services.
 ```bash
 gcloud beta container --project "$PROJECT_ID" clusters create "$CLUSTER_NAME" \
     --region "$REGION" \
@@ -57,7 +61,8 @@ gcloud beta container --project "$PROJECT_ID" clusters create "$CLUSTER_NAME" \
     --enable-multi-networking \
     --gateway-api=standard
 ```
-## Create GPU Nodepool
+### Create the GPU Nodepool
+This nodepool is specifically configured with GPUs to run the LLM inference workloads.
 ```bash
 gcloud beta container --project "$PROJECT_ID" node-pools create "$NODEPOOL_NAME" \
     --cluster "$CLUSTER_NAME" \
@@ -75,7 +80,8 @@ gcloud beta container --project "$PROJECT_ID" node-pools create "$NODEPOOL_NAME"
     --shielded-secure-boot
 ```
 
-## Clone llm-d git repo & install dependencies
+## 4. llm-d and Dependency Installation
+Now, prepare your environment by cloning the necessary repository and installing dependencies.
 ```bash
 git clone https://github.com/llm-d/llm-d-deployer.git
 cd llm-d-deployer/quickstart
@@ -83,34 +89,34 @@ cd llm-d-deployer/quickstart
 
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo add llm-d https://llm-d.ai/llm-d-deployer
-
 helm repo update
 ```
 
-## Set up Huggingface token environment variable
+## 5. Kubernetes Configuration ( Optional )
+Create Hugging Face Token Secret
+Create a Kubernetes secret to securely store your Hugging Face token. This will be used by `llm-d` to download the model.
+You can skip this step if you're using the SampleApplication chart from the `llm-d-deployer` repo.
 ```bash
-export HF_TOKEN=${INSERT YOUR TOKEN HERE}
+kubectl create secret generic llm-d-hf-token \
+    --from-literal="HF_TOKEN=${HF_TOKEN}"
 ```
 
-Make sure you have requested access to the https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct model.
 
-## Set up GKE Inference Gateway
+## Set up GKE Inference Gateway CRD and RBAC
+Apply the necessary manifests for the GKE Inference Gateway and configure the required Role-Based Access Control (RBAC) for metrics scraping.
 ```bash
+# Install the Gateway API Inference Extension
 kubectl apply -f https://github.com/kubernetes-sigs/gateway-api-inference-extension/releases/download/v0.3.0/manifests.yaml
-
 
 # Set up authorization for the metrics scraper
 kubectl apply -f - <<EOF
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: inference-gateway-metrics-reader
 rules:
-- nonResourceURLs:
-  - /metrics
-  verbs:
-  - get
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -122,7 +128,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: inference-gateway-sa-metrics-reader-role-binding
-  namespace: default
 subjects:
 - kind: ServiceAccount
   name: inference-gateway-sa-metrics-reader
@@ -132,44 +137,37 @@ roleRef:
   name: inference-gateway-metrics-reader
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: inference-gateway-sa-metrics-reader-secret
-  namespace: default
-  annotations:
-    kubernetes.io/service-account.name: inference-gateway-sa-metrics-reader
-type: kubernetes.io/service-account-token
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: inference-gateway-sa-metrics-reader-secret-read
+  name: gmp-system-collector-read-secrets
 rules:
-- resources:
-  - secrets
-  apiGroups: [""]
+- apiGroups: [""]
+  resources: ["secrets"]
   verbs: ["get", "list", "watch"]
-  resourceNames: ["inference-gateway-sa-metrics-reader-secret"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: gmp-system:collector:inference-gateway-sa-metrics-reader-secret-read
-  namespace: default
+  name: gmp-system-collector-secret-reader
 roleRef:
-  name: inference-gateway-sa-metrics-reader-secret-read
-  kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gmp-system-collector-read-secrets
 subjects:
-- name: collector
+- kind: ServiceAccount
+  name: collector
   namespace: gmp-system
-  kind: ServiceAccount
 EOF
 
 ```
 
-## Configure llm-d
+## 6. llm-d Configuration
+Create the configuration files for the llm-d core components and the sample application.
+
+### Configure Core llm-d Services
+This configuration enables the necessary backend services for `llm-d`, such as Redis and the model service.
+
 ```bash
 cat <<'EOF' > llm-d-gke.yaml
 sampleApplication:
@@ -210,10 +208,10 @@ modelservice:
       #repository: vllm/vllm-openai
       #tag: v0.9.1
 EOF
-
 ```
 
-## configure llm-d sample app
+### Configure the llm-d Sample Application
+This configuration defines the model that will be deployed.
 ```bash
 cat <<'EOF' > llm-d-sample.yaml
 sampleApplication:
@@ -231,23 +229,15 @@ redis:
 EOF
 ```
 
-
-## Create huggingface token secret
-```bash
-kubectl create secret generic llm-d-hf-token \
-    --from-literal="HF_TOKEN=${HF_TOKEN}"
-```
-
-
-
-## Install llm-d
+## 7. Deploy llm-d
+Install the llm-d components using Helm and the configurations you just created.
 ```bash
 helm install llm-d llm-d/llm-d -f llm-d-gke.yaml
 helm install llm-d-sample llm-d/llm-d -f llm-d-sample.yaml 
-
 ```
 
-## Create gateway and route
+## 8. Expose the Model with a Gateway
+Create a Kubernetes Gateway and HTTPRoute to expose the deployed model to receive inference requests. This also includes health check and backend policies.
 ```yaml
 kubectl apply -f - <<EOF
 apiVersion: gateway.networking.k8s.io/v1
@@ -311,36 +301,35 @@ spec:
           port: 8000
 EOF
 ```
+## 9. Model Service Adjustments
+The `llm-d` image used by the default configuration does not work out of the box on GKE.
+This can be fixed by adjusting the `PATH` and `LD_LIBRARY_PATH` variables in the `ModelService`
 
-
-## fix PATH and LD_LIBRARY_PATH
 ```bash
 kubectl patch ModelService llama-3-2-3b-instruct --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/decode/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
 
 kubectl patch ModelService llama-3-2-3b-instruct --type='json' -p='[{"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
 ```
-## Notes
-On L4 GPUs probably have to edit the ModelService and add `--gpu-memory-utilization 0.95` to vllm startup options or reduce the context window with like so `--max-model-len 65536`
 
+*Note on L4 GPUs*: You may need to adjust the `ModelService` to optimize for the L4 GPU architecture.
 
-## Testing
+To prevent out-of-memory errors, you can add arguments to the vllm startup command. For example, to set the GPU memory utilization:
 ```bash
-IP=$(kubectl get gateway/llama-3-2-3b-instruct-gateway -o jsonpath='{.status.addresses[0].value}')
-PORT=80 # Use 80 for HTTP
-
-curl -i -X POST ${IP}:${PORT}/v1/completions \
--H 'Content-Type: application/json' \
--H 'Authorization: Bearer $(gcloud auth print-access-token)' \
--d '{
-    "model": "llama-3.2-3B-Instruct",
-    "prompt": "Say something",
-    "max_tokens": 8124,
-    "temperature": "0.5"
-}'
+# This is an example patch. The name of the ModelService might differ.
+kubectl patch ModelService llama-3-2-1b-instruct --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/args/-", "value": "--gpu-memory-utilization=0.95"}]'
+```
+Alternatively, you could reduce the maximum model length (context window):
+```bash
+# This is an example patch. The name of the ModelService might differ.
+kubectl patch ModelService llama-3-2-1b-instruct --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/args/-", "value": "--max-model-len=65536"}]'
 ```
 
-## Testing
-More work to be done here:
+
+
+## 10. Testing the Deployment
+Once the deployment is complete, you can test it by sending a completion request.
+
+### Using the included test script
 ```bash
 ./test-request.sh -n default
 Namespace: default
@@ -365,31 +354,53 @@ If you don't see a command prompt, try pressing enter.
 All tests complete.
 ```
 
+### Manual testing
+This will only work from the same region.
+```bash
+IP=$(kubectl get gateway/llama-3-2-1b-instruct-gateway -o jsonpath='{.status.addresses[0].value}')
+PORT=80 # Use 80 for HTTP
 
-## other ModelService
+curl -i -X POST ${IP}:${PORT}/v1/completions \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer $(gcloud auth print-access-token)' \
+-d '{
+    "model": "llama-3.2-3B-Instruct",
+    "prompt": "Say something",
+    "max_tokens": 8124,
+    "temperature": "0.5"
+}'
+```
+
+11. Cleanup
+To remove all the resources created in this guide, delete the GKE cluster.
+```bash
+gcloud container clusters delete "$CLUSTER_NAME" --region "$REGION"
+```
+
+
+## Add another ModelService
+This is full example how to add another ModelService
 ```yaml
 kubectl apply -f - <<EOF
 apiVersion: llm-d.ai/v1alpha1
 kind: ModelService
 metadata:
-  name: llama3
+  name: qwen3-0-6B
 spec:
   modelArtifacts:
-    uri: hf://meta-llama/Llama-3.2-3B-Instruct
+    uri: hf://Qwen/Qwen3-0.6B
   decoupleScaling: false
   baseConfigMapRef:
-    name: basic-gpu-with-nixl-and-redis-lookup-preset
+    name: basic-gpu-preset
   routing:
-    modelName: Llama-3.2-3B-Instruct
+    modelName: Qwen3-0.6B
   decode:
     replicas: 1
     containers:
     - name: "vllm"
       args:
       - "--model"
-      - "meta-llama/Llama-3.2-3B-Instruct"
-      - "--max-model-len"
-      - "65536"
+      - "Qwen/Qwen3-0.6B"
       env:
       - name: HF_TOKEN
         valueFrom:
@@ -406,9 +417,7 @@ spec:
     - name: "vllm"
       args:
       - "--model"
-      - "meta-llama/Llama-3.2-3B-Instruct"
-      - "--max-model-len"
-      - "65536"
+      - "Qwen/Qwen3-0.6B"
       env:
       - name: HF_TOKEN
         valueFrom:
@@ -419,55 +428,70 @@ spec:
         value: /usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin
       - name: LD_LIBRARY_PATH
         value: /usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib
-EOF
-```
-
-# TODO
-
-this stuff needs to be integrated better
-
-Might also still have to do some more work 
-```
+---
+kubectl apply -f - <<EOF
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: qwen3-0-6B-gateway
+spec:
+  gatewayClassName: gke-l7-rilb
+  listeners:
+    - protocol: HTTP # Or HTTPS for production
+      port: 80 # Or 443 for HTTPS
+      name: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: qwen3-0-6B-route
+spec:
+  parentRefs:
+  - name: qwen3-0-6B-gateway
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: qwen3-0-6B-inference-pool
+      group: inference.networking.x-k8s.io
+      kind: InferencePool
+---
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: qwen3-0-6B-backend-policy
+  namespace: default
+spec:
+  default:
+    logging:
+      enabled: true
+    timeoutSec: 300
+  targetRef:
+    group: inference.networking.x-k8s.io
+    kind: InferencePool
+    name: qwen3-0-6B-inference-pool
+---
 kind: HealthCheckPolicy
 apiVersion: networking.gke.io/v1
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "gateway-api-inference-extension.labels" . | nindent 4 }}
+  name: qwen3-0-6B-health-check-policy
+  namespace: default
 spec:
   targetRef:
     group: "inference.networking.x-k8s.io"
     kind: InferencePool
-    name: {{ .Release.Name }}
+    name: qwen3-0-6B-inference-pool
   default:
     config:
       type: HTTP
       httpHealthCheck:
           requestPath: /health
-          port:  {{ .Values.inferencePool.targetPortNumber }}
----
-apiVersion: networking.gke.io/v1
-kind: GCPBackendPolicy
-metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "gateway-api-inference-extension.labels" . | nindent 4 }}
-spec:
-  targetRef:
-    group: "inference.networking.x-k8s.io"
-    kind: InferencePool
-    name: {{ .Release.Name }}
-  default:
-    timeoutSec: 300    # 5-minute timeout (adjust as needed)
-    logging:
-      enabled: true    # log all requests by default
+          port: 8000
+EOF
 ```
 
-
-
-## Cleanup
-```bash
-gcloud container clusters delete mwy-llm-d --region us-central1
-```
+## TODO
+* GMP Monitoring
+* Helm integration for HealthCheckPolicy, Gateway, GCPBackendPolicy, HTTPRoute
