@@ -1,5 +1,16 @@
-# gke-llm-d
-## Set up your environment settings
+# Deploying a Large Language Model with llm-d on Google Kubernetes Engine (GKE)
+This guide provides step-by-step instructions for deploying a large language model using the `llm-d` architecture on a GKE cluster with GPU acceleration
+
+## 1. Prerequisites
+Before you begin, ensure you have the following:
+* Google Cloud SDK (gcloud): Installed and authenticated.
+* kubectl: The Kubernetes command-line tool.
+* Helm: The package manager for Kubernetes.
+* Hugging Face Account: You will need an account and an access token.
+* Model Access: Request access to the meta-llama/Llama-3.2-8B-Instruct model on Hugging Face.
+
+## 2. Environment Configuration
+First, set up the environment variables that will be used throughout the deployment process.
 ```bash
 # Google Cloud Platform settings
 export PROJECT_ID="gpu-launchpad-playground"
