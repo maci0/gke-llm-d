@@ -248,14 +248,28 @@ spec:
     - name: "vllm"
       args:
       - "--model"
-      - meta-llama/Llama-3.2-3B-Instruct
+      - "meta-llama/Llama-3.2-3B-Instruct"
+      - "--max-model-len"
+      - "65536"
+    - env:
+      - name: PATH
+        value: "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"
+      - name: LD_LIBRARY_PATH
+        value: "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"
   prefill:
     replicas: 1
     containers:
     - name: "vllm"
       args:
       - "--model"
-      - meta-llama/Llama-3.2-3B-Instruct
+      - "meta-llama/Llama-3.2-3B-Instruct"
+      - "--max-model-len"
+      - "65536"
+    - env:
+      - name: PATH
+        value: "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"
+      - name: LD_LIBRARY_PATH
+        value: "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"
 EOF
 ```
 
