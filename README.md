@@ -382,7 +382,14 @@ curl -i -X POST ${IP}:${PORT}/v1/completions \
 ```
 
 ## 11. Cleanup
-To remove all the resources created in this guide, delete the GKE cluster.
+To remove all the resources created in this guide
+```bash
+kubectl delete HealthCheckPolicy,Gateway,GCPBackendPolicy,HTTPRoute --all
+helm uninstall llm-d-sample
+heml uninstall llm-d
+```
+
+Or simply delete the GKE cluster.
 ```bash
 gcloud container clusters delete "$CLUSTER_NAME" --region "$REGION"
 ```
