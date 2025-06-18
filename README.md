@@ -217,7 +217,7 @@ We are using the `basic-gpu-preset` base configmap.
 You can view it running `kubectl get cm basic-gpu-preset -o yaml`
 ```bash
 
-export MODEL_ID="meta-llama/Llama-3.2-8B-Instruct"
+export MODEL_ID="meta-llama/Llama-3.2-1B-Instruct"
 # A Kubernetes-friendly name for the model resources
 export MODEL_NAME="llama-3-2-1b-instruct"
 
