@@ -357,6 +357,22 @@ kubectl patch ModelService llama-3-2-3b-instruct --type='json' -p='[{"op": "add"
 On L4 GPUs probably have to edit the ModelService and add `--gpu-memory-utilization 0.95` to vllm startup options or reduce the context window with like so `--max-model-len 65536`
 
 ## Testing
+```bash
+IP=$(kubectl get gateway/llama-3-2-3b-instruct-gateway -o jsonpath='{.status.addresses[0].value}')
+PORT=80 # Use 80 for HTTP
+
+curl -i -X POST ${IP}:${PORT}/v1/completions \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer $(gcloud auth print-access-token)' \
+-d '{
+    "model": "llama-3.2-3B-Instruct",
+    "prompt": "Say something",
+    "max_tokens": 8124,
+    "temperature": "0.5"
+}'
+```
+
+## Testing
 More work to be done here:
 ```bash
 ./test-request.sh -n default
