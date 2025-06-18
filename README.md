@@ -66,13 +66,8 @@ cd llm-d-deployer/quickstart
 
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo add llm-d https://llm-d.ai/llm-d-deployer
-helm repo add istio https://istio-release.storage.googleapis.com/charts
 
 helm repo update
-
-#helm upgrade -i istio-base istio/base --version 1.26.1 -n istio-system --create-namespace
-#helm upgrade -i istiod istio/istiod --version 1.26.1 -n istio-system --wait
-
 ```
 
 ## Set up Huggingface token environment variable
@@ -256,7 +251,7 @@ kind: Gateway
 metadata:
   name: llama-3-2-3b-instruct-gateway
 spec:
-  gatewayClassName: gke-l7-rilb
+  gatewayClassName: gke-l7-regional-external-managed
   listeners:
     - protocol: HTTP # Or HTTPS for production
       port: 80 # Or 443 for HTTPS
