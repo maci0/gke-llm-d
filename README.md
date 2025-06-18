@@ -178,7 +178,8 @@ redis:
   enabled: true
 modelservice:
   vllm:
-    enabled: true
+    metrics:
+      enabled: true
     #image:
       #registry: registry.hub.docker.com
       #repository: vllm/vllm-openai
