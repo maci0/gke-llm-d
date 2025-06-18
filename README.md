@@ -214,7 +214,7 @@ EOF
 
 ```
 
-## deploy llm-d sample app
+## configure llm-d sample app
 ```bash
 cat <<'EOF' > llm-d-sample.yaml
 sampleApplication:
@@ -226,6 +226,8 @@ sampleApplication:
 gateway:
   enabled: false
 modelservice:
+  enabled: false
+redis:
   enabled: false
 EOF
 ```
