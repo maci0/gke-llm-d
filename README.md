@@ -314,7 +314,7 @@ kubectl patch ModelService llama-3-2-3b-instruct --type='json' -p='[{"op": "add"
 ```
 
 
-### Optimize for the L4 GPU architecture ( Optional ) *
+### Optimize for the L4 GPU architecture ( Optional )
 You may need to adjust the `ModelService` to optimize for the L4 GPU architecture.
 
 To prevent out-of-memory errors, you can add arguments to the vllm startup command. For example, to set the GPU memory utilization:
@@ -368,7 +368,7 @@ curl -i -X POST ${IP}:${PORT}/v1/completions \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer $(gcloud auth print-access-token)' \
 -d '{
-    "model": "llama-3.2-3B-Instruct",
+    "model": "llama-3.2-1B-Instruct",
     "prompt": "Say something",
     "max_tokens": 8124,
     "temperature": "0.5"
