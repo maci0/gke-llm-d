@@ -345,21 +345,24 @@ Once the deployment is complete, you can test it by sending a completion request
 Namespace: default
 Model ID:  none; will be discover from first entry in /v1/models
 
-1 -> Fetching available models from the decode pod at 10.108.4.9…
-{"object":"list","data":[{"id":"llama-3.2-3B-Instruct","object":"model","created":1750231376,"owned_by":"vllm","root":"meta-llama/Llama-3.2-3B-Instruct","parent":null,"max_model_len":65536,"permission":[{"id":"modelperm-f795474b454c41769e10dffd191ca203","object":"model_permission","created":1750231376,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-4912" deleted
-
-Discovered model to use: llama-3.2-3B-Instruct
-
-2 -> Sending a completion request to the decode pod at 10.108.4.9…
+1 -> Fetching available models from the decode pod at 10.108.6.10…
 If you don't see a command prompt, try pressing enter.
-{"id":"cmpl-4d3a726fbc734d1591b381fa08ff04ed","object":"text_completion","created":1750231379,"model":"llama-3.2-3B-Instruct","choices":[{"index":0,"text":" (The story of a young woman)\nI am a young woman, a daughter","logprobs":null,"finish_reason":"length","stop_reason":null,"prompt_logprobs":null}],"usage":{"prompt_tokens":5,"total_tokens":21,"completion_tokens":16,"prompt_tokens_details":null},"kv_transfer_params":null}pod "curl-9478" deleted
+warning: couldn't attach to pod/curl-1236, falling back to streaming logs: Internal error occurred: unable to upgrade connection: container curl-1236 not found in pod curl-1236_default
+{"object":"list","data":[{"id":"llama-3-2-1b-instruct","object":"model","created":1750258028,"owned_by":"vllm","root":"meta-llama/Llama-3.2-1B-Instruct","parent":null,"max_model_len":131072,"permission":[{"id":"modelperm-c2de4561c7884e35a7495d19a4b49564","object":"model_permission","created":1750258028,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-1236" deleted
 
-3 -> Fetching available models via the gateway at 10.128.0.171…
-{"object":"list","data":[{"id":"llama-3.2-3B-Instruct","object":"model","created":1750231383,"owned_by":"vllm","root":"meta-llama/Llama-3.2-3B-Instruct","parent":null,"max_model_len":65536,"permission":[{"id":"modelperm-8944305d311344c38ad54c67310d70aa","object":"model_permission","created":1750231383,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-7984" deleted
+Discovered model to use: llama-3-2-1b-instruct
+
+2 -> Sending a completion request to the decode pod at 10.108.6.10…
+If you don't see a command prompt, try pressing enter.
+warning: couldn't attach to pod/curl-9107, falling back to streaming logs: Internal error occurred: unable to upgrade connection: container curl-9107 not found in pod curl-9107_default
+{"id":"cmpl-c8fc134073164b6c99ed480396491b35","object":"text_completion","created":1750258032,"model":"llama-3-2-1b-instruct","choices":[{"index":0,"text":" I'm a curious person, and I'm interested in learning more about the world","logprobs":null,"finish_reason":"length","stop_reason":null,"prompt_logprobs":null}],"usage":{"prompt_tokens":5,"total_tokens":21,"completion_tokens":16,"prompt_tokens_details":null},"kv_transfer_params":null}pod "curl-9107" deleted
+
+3 -> Fetching available models via the gateway at 10.128.0.248…
+{"object":"list","data":[{"id":"llama-3-2-1b-instruct","object":"model","created":1750258037,"owned_by":"vllm","root":"meta-llama/Llama-3.2-1B-Instruct","parent":null,"max_model_len":131072,"permission":[{"id":"modelperm-8267c8382315434ca5267e04c21997c1","object":"model_permission","created":1750258037,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-3122" deleted
 
 
-4 -> Sending a completion request via the gateway at 10.128.0.171 with model 'llama-3.2-3B-Instruct'…
-{"choices":[{"finish_reason":"length","index":0,"logprobs":null,"prompt_logprobs":null,"stop_reason":null,"text":" I am a user of the internet, a student, a curious individual with a"}],"created":1750231387,"id":"cmpl-12893c3c4c8e4518b552f9e47d5bff7b","kv_transfer_params":null,"model":"llama-3.2-3B-Instruct","object":"text_completion","usage":{"completion_tokens":16,"prompt_tokens":5,"prompt_tokens_details":null,"total_tokens":21}}pod "curl-2163" deleted
+4 -> Sending a completion request via the gateway at 10.128.0.248 with model 'llama-3-2-1b-instruct'…
+{"choices":[{"finish_reason":"length","index":0,"logprobs":null,"prompt_logprobs":null,"stop_reason":null,"text":" I can help you find the answer.\nI am the one you're looking for"}],"created":1750258041,"id":"cmpl-55aa6f37c3c34594ae223ed66ad5a0fb","kv_transfer_params":null,"model":"llama-3-2-1b-instruct","object":"text_completion","usage":{"completion_tokens":16,"prompt_tokens":5,"prompt_tokens_details":null,"total_tokens":21}}pod "curl-7029" deleted
 
 All tests complete.
 ```
