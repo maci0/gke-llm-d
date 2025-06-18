@@ -217,13 +217,18 @@ This configuration defines the model that will be deployed.
 We are using the `basic-gpu-preset` base configmap.
 You can view it running `kubectl get cm basic-gpu-preset -o yaml`
 ```bash
+
+export MODEL_ID="meta-llama/Llama-3.2-8B-Instruct"
+# A Kubernetes-friendly name for the model resources
+export MODEL_NAME="llama-3-2-1b-instruct"
+
 cat <<'EOF' > llm-d-sample.yaml
 sampleApplication:
   enabled: true
   baseConfigMapRefName: basic-gpu-preset
   model:
-    modelArtifactURI: hf://meta-llama/Llama-3.2-1B-Instruct
-    modelName: "llama-3.2-1B-Instruct"
+    modelArtifactURI: "hf://${MODEL_ID}"
+    modelName: "${MODEL_NAME}"
 gateway:
   enabled: false
 modelservice:
@@ -247,7 +252,7 @@ kubectl apply -f - <<EOF
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: llama-3-2-1b-instruct-gateway
+  name: ${MODEL_NAME}-gateway
 spec:
   gatewayClassName: gke-l7-rilb
   listeners:
@@ -258,24 +263,24 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: llama-3-2-1b-instruct-route
+  name: ${MODEL_NAME}-route
 spec:
   parentRefs:
-  - name: llama-3-2-1b-instruct-gateway
+  - name: ${MODEL_NAME}-gateway
   rules:
   - matches:
     - path:
         type: PathPrefix
         value: /
     backendRefs:
-    - name: llama-3-2-1b-instruct-inference-pool
+    - name: ${MODEL_NAME}-inference-pool
       group: inference.networking.x-k8s.io
       kind: InferencePool
 ---
 apiVersion: networking.gke.io/v1
 kind: GCPBackendPolicy
 metadata:
-  name: llama-3-2-1b-instruct-backend-policy
+  name: ${MODEL_NAME}-backend-policy
   namespace: default
 spec:
   default:
@@ -285,18 +290,18 @@ spec:
   targetRef:
     group: inference.networking.x-k8s.io
     kind: InferencePool
-    name: llama-3-2-1b-instruct-inference-pool
+    name: ${MODEL_NAME}-inference-pool
 ---
 kind: HealthCheckPolicy
 apiVersion: networking.gke.io/v1
 metadata:
-  name: llama-3-2-1b-instruct-health-check-policy
+  name: ${MODEL_NAME}-health-check-policy
   namespace: default
 spec:
   targetRef:
     group: "inference.networking.x-k8s.io"
     kind: InferencePool
-    name: llama-3-2-1b-instruct-inference-pool
+    name: ${MODEL_NAME}-inference-pool
   default:
     config:
       type: HTTP
@@ -310,9 +315,9 @@ The `llm-d` image used by the default configuration does not work out of the box
 This can be fixed by adjusting the `PATH` and `LD_LIBRARY_PATH` variables in the `ModelService`
 
 ```bash
-kubectl patch ModelService llama-3-2-1b-instruct --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/decode/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
+kubectl patch ModelService ${MODEL_NAME} --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/decode/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
 
-kubectl patch ModelService llama-3-2-1b-instruct --type='json' -p='[{"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
+kubectl patch ModelService ${MODEL_NAME} --type='json' -p='[{"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
 ```
 
 
@@ -322,12 +327,12 @@ You may need to adjust the `ModelService` to optimize for the L4 GPU architectur
 To prevent out-of-memory errors, you can add arguments to the vllm startup command. For example, to set the GPU memory utilization:
 ```bash
 # This is an example patch. The name of the ModelService might differ.
-kubectl patch ModelService llama-3-2-1b-instruct --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/args/-", "value": "--gpu-memory-utilization=0.95"}]'
+kubectl patch ModelService ${MODEL_NAME} --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/args/-", "value": "--gpu-memory-utilization=0.95"}]'
 ```
 Alternatively, you could reduce the maximum model length (context window):
 ```bash
 # This is an example patch. The name of the ModelService might differ.
-kubectl patch ModelService llama-3-2-1b-instruct --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/args/-", "value": "--max-model-len=65536"}]'
+kubectl patch ModelService ${MODEL_NAME} --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/args/-", "value": "--max-model-len=65536"}]'
 ```
 
 
@@ -363,14 +368,14 @@ All tests complete.
 ### Manual testing
 This will only work from the same region.
 ```bash
-IP=$(kubectl get gateway/llama-3-2-1b-instruct-gateway -o jsonpath='{.status.addresses[0].value}')
+IP=$(kubectl get gateway/${MODEL_NAME}-gateway -o jsonpath='{.status.addresses[0].value}')
 PORT=80 # Use 80 for HTTP
 
 curl -i -X POST ${IP}:${PORT}/v1/completions \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Bearer $(gcloud auth print-access-token)' \
 -d '{
-    "model": "llama-3.2-1B-Instruct",
+    "model": "${MODEL_NAME}",
     "prompt": "Say something",
     "max_tokens": 8124,
     "temperature": "0.5"
