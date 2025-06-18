@@ -304,7 +304,61 @@ spec:
 EOF
 ```
 
-## install example workload
+
+## fix PATH and LD_LIBRARY_PATH
+```bash
+kubectl patch ModelService llama-3-2-3b-instruct --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/decode/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
+
+kubectl patch ModelService llama-3-2-3b-instruct --type='json' -p='[{"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
+```
+## Notes
+On L4 GPUs probably have to edit the ModelService and add `--gpu-memory-utilization 0.95` to vllm startup options or reduce the context window with like so `--max-model-len 65536`
+
+
+## Testing
+```bash
+IP=$(kubectl get gateway/llama-3-2-3b-instruct-gateway -o jsonpath='{.status.addresses[0].value}')
+PORT=80 # Use 80 for HTTP
+
+curl -i -X POST ${IP}:${PORT}/v1/completions \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer $(gcloud auth print-access-token)' \
+-d '{
+    "model": "llama-3.2-3B-Instruct",
+    "prompt": "Say something",
+    "max_tokens": 8124,
+    "temperature": "0.5"
+}'
+```
+
+## Testing
+More work to be done here:
+```bash
+./test-request.sh -n default
+Namespace: default
+Model ID:  none; will be discover from first entry in /v1/models
+
+1 -> Fetching available models from the decode pod at 10.108.4.9…
+{"object":"list","data":[{"id":"llama-3.2-3B-Instruct","object":"model","created":1750231376,"owned_by":"vllm","root":"meta-llama/Llama-3.2-3B-Instruct","parent":null,"max_model_len":65536,"permission":[{"id":"modelperm-f795474b454c41769e10dffd191ca203","object":"model_permission","created":1750231376,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-4912" deleted
+
+Discovered model to use: llama-3.2-3B-Instruct
+
+2 -> Sending a completion request to the decode pod at 10.108.4.9…
+If you don't see a command prompt, try pressing enter.
+{"id":"cmpl-4d3a726fbc734d1591b381fa08ff04ed","object":"text_completion","created":1750231379,"model":"llama-3.2-3B-Instruct","choices":[{"index":0,"text":" (The story of a young woman)\nI am a young woman, a daughter","logprobs":null,"finish_reason":"length","stop_reason":null,"prompt_logprobs":null}],"usage":{"prompt_tokens":5,"total_tokens":21,"completion_tokens":16,"prompt_tokens_details":null},"kv_transfer_params":null}pod "curl-9478" deleted
+
+3 -> Fetching available models via the gateway at 10.128.0.171…
+{"object":"list","data":[{"id":"llama-3.2-3B-Instruct","object":"model","created":1750231383,"owned_by":"vllm","root":"meta-llama/Llama-3.2-3B-Instruct","parent":null,"max_model_len":65536,"permission":[{"id":"modelperm-8944305d311344c38ad54c67310d70aa","object":"model_permission","created":1750231383,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-7984" deleted
+
+
+4 -> Sending a completion request via the gateway at 10.128.0.171 with model 'llama-3.2-3B-Instruct'…
+{"choices":[{"finish_reason":"length","index":0,"logprobs":null,"prompt_logprobs":null,"stop_reason":null,"text":" I am a user of the internet, a student, a curious individual with a"}],"created":1750231387,"id":"cmpl-12893c3c4c8e4518b552f9e47d5bff7b","kv_transfer_params":null,"model":"llama-3.2-3B-Instruct","object":"text_completion","usage":{"completion_tokens":16,"prompt_tokens":5,"prompt_tokens_details":null,"total_tokens":21}}pod "curl-2163" deleted
+
+All tests complete.
+```
+
+
+## other ModelService
 ```yaml
 kubectl apply -f - <<EOF
 apiVersion: llm-d.ai/v1alpha1
@@ -360,58 +414,9 @@ spec:
 EOF
 ```
 
-## fix PATH and LD_LIBRARY_PATH
-```bash
-kubectl patch ModelService llama-3-2-3b-instruct --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/decode/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
+# TODO
 
-kubectl patch ModelService llama-3-2-3b-instruct --type='json' -p='[{"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
-```
-## Notes
-On L4 GPUs probably have to edit the ModelService and add `--gpu-memory-utilization 0.95` to vllm startup options or reduce the context window with like so `--max-model-len 65536`
-
-## Testing
-```bash
-IP=$(kubectl get gateway/llama-3-2-3b-instruct-gateway -o jsonpath='{.status.addresses[0].value}')
-PORT=80 # Use 80 for HTTP
-
-curl -i -X POST ${IP}:${PORT}/v1/completions \
--H 'Content-Type: application/json' \
--H 'Authorization: Bearer $(gcloud auth print-access-token)' \
--d '{
-    "model": "llama-3.2-3B-Instruct",
-    "prompt": "Say something",
-    "max_tokens": 8124,
-    "temperature": "0.5"
-}'
-```
-
-## Testing
-More work to be done here:
-```bash
-./test-request.sh -n default
-Namespace: default
-Model ID:  none; will be discover from first entry in /v1/models
-
-1 -> Fetching available models from the decode pod at 10.108.4.9…
-{"object":"list","data":[{"id":"llama-3.2-3B-Instruct","object":"model","created":1750231376,"owned_by":"vllm","root":"meta-llama/Llama-3.2-3B-Instruct","parent":null,"max_model_len":65536,"permission":[{"id":"modelperm-f795474b454c41769e10dffd191ca203","object":"model_permission","created":1750231376,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-4912" deleted
-
-Discovered model to use: llama-3.2-3B-Instruct
-
-2 -> Sending a completion request to the decode pod at 10.108.4.9…
-If you don't see a command prompt, try pressing enter.
-{"id":"cmpl-4d3a726fbc734d1591b381fa08ff04ed","object":"text_completion","created":1750231379,"model":"llama-3.2-3B-Instruct","choices":[{"index":0,"text":" (The story of a young woman)\nI am a young woman, a daughter","logprobs":null,"finish_reason":"length","stop_reason":null,"prompt_logprobs":null}],"usage":{"prompt_tokens":5,"total_tokens":21,"completion_tokens":16,"prompt_tokens_details":null},"kv_transfer_params":null}pod "curl-9478" deleted
-
-3 -> Fetching available models via the gateway at 10.128.0.171…
-{"object":"list","data":[{"id":"llama-3.2-3B-Instruct","object":"model","created":1750231383,"owned_by":"vllm","root":"meta-llama/Llama-3.2-3B-Instruct","parent":null,"max_model_len":65536,"permission":[{"id":"modelperm-8944305d311344c38ad54c67310d70aa","object":"model_permission","created":1750231383,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-7984" deleted
-
-
-4 -> Sending a completion request via the gateway at 10.128.0.171 with model 'llama-3.2-3B-Instruct'…
-{"choices":[{"finish_reason":"length","index":0,"logprobs":null,"prompt_logprobs":null,"stop_reason":null,"text":" I am a user of the internet, a student, a curious individual with a"}],"created":1750231387,"id":"cmpl-12893c3c4c8e4518b552f9e47d5bff7b","kv_transfer_params":null,"model":"llama-3.2-3B-Instruct","object":"text_completion","usage":{"completion_tokens":16,"prompt_tokens":5,"prompt_tokens_details":null,"total_tokens":21}}pod "curl-2163" deleted
-
-All tests complete.
-```
-
-
+this stuff needs to be integrated better
 
 Might also still have to do some more work 
 ```
