@@ -169,7 +169,7 @@ Create the configuration files for the llm-d core components and the sample appl
 This configuration enables the necessary backend services for `llm-d`, such as Redis and the model service.
 
 ```bash
-cat <<'EOF' > llm-d-gke.yaml
+cat <<EOF > llm-d-gke.yaml
 sampleApplication:
   enabled: false
 gateway:
@@ -208,7 +208,6 @@ modelservice:
         value: "true"
   metrics:
     enabled: false
-
 EOF
 ```
 
@@ -222,7 +221,7 @@ export MODEL_ID="meta-llama/Llama-3.2-8B-Instruct"
 # A Kubernetes-friendly name for the model resources
 export MODEL_NAME="llama-3-2-1b-instruct"
 
-cat <<'EOF' > llm-d-sample.yaml
+cat <<EOF > llm-d-sample.yaml
 sampleApplication:
   enabled: true
   baseConfigMapRefName: basic-gpu-preset
