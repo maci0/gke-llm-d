@@ -386,7 +386,7 @@ To remove all the resources created in this guide
 ```bash
 kubectl delete HealthCheckPolicy,Gateway,GCPBackendPolicy,HTTPRoute --all
 helm uninstall llm-d-sample
-heml uninstall llm-d
+helm uninstall llm-d
 ```
 
 Or simply delete the GKE cluster.
