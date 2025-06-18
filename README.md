@@ -71,8 +71,8 @@ helm repo add istio https://istio-release.storage.googleapis.com/charts
 
 helm repo update
 
-helm upgrade -i istio-base istio/base --version 1.26.1 -n istio-system --create-namespace
-helm upgrade -i istiod istio/istiod --version 1.26.1 -n istio-system --wait
+#helm upgrade -i istio-base istio/base --version 1.26.1 -n istio-system --create-namespace
+#helm upgrade -i istiod istio/istiod --version 1.26.1 -n istio-system --wait
 
 ```
 
@@ -166,8 +166,10 @@ sampleApplication:
   model:
     modelArtifactURI: hf://meta-llama/Llama-3.2-3B-Instruct
     modelName: "meta-llama/Llama-3.2-3B-Instruct"
+gateway:
+  enabled: false	
 redis:
-  enabled: false
+  enabled: true
 modelservice:
   epp:
     defaultEnvVarsOverride:
