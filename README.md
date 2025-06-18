@@ -157,10 +157,6 @@ EOF
 cat <<'EOF' > llm-d-gke.yaml
 sampleApplication:
   enabled: false
-  baseConfigMapRefName: basic-gpu-preset
-  model:
-    modelArtifactURI: hf://meta-llama/Llama-3.2-3B-Instruct
-    modelName: "meta-llama/Llama-3.2-3B-Instruct"
 gateway:
   enabled: false	
 redis:
