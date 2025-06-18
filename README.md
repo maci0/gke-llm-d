@@ -233,8 +233,10 @@ kubectl apply -f - <<EOF
 apiVersion: llm-d.ai/v1alpha1
 kind: ModelService
 metadata:
-  name: Llama-3.2-3B-Instruct
+  name: llama3
 spec:
+  modelArtifacts:
+    uri: hf://meta-llama/Llama-3.2-3B-Instruct
   decoupleScaling: false
   baseConfigMapRef:
     name: basic-gpu-with-nixl-and-redis-lookup-preset
