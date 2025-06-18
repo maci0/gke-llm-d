@@ -222,9 +222,39 @@ kubectl create secret generic llm-d-hf-token \
 
 
 
-## Install llm-d expample workload
+## Install llm-d
 ```bash
 helm install llm-d llm-d/llm-d -f llm-d-gke.yaml 
+```
+
+## install example workload
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: llm-d.ai/v1alpha1
+kind: ModelService
+metadata:
+  name: Llama-3.2-3B-Instruct
+spec:
+  decoupleScaling: false
+  baseConfigMapRef:
+    name: basic-gpu-with-nixl-and-redis-lookup-preset
+  routing:
+    modelName: Llama-3.2-3B-Instruct
+  decode:
+    replicas: 1
+    containers:
+    - name: "vllm"
+      args:
+      - "--model"
+      - meta-llama/Llama-3.2-3B-Instruct
+  prefill:
+    replicas: 1
+    containers:
+    - name: "vllm"
+      args:
+      - "--model"
+      - meta-llama/Llama-3.2-3B-Instruct
+EOF
 ```
 
 ## fix PATH and LD_LIBRARY_PATH
