@@ -227,6 +227,7 @@ gateway:
   enabled: false
 modelservice:
   enabled: false
+EOF
 ```
 
 
