@@ -288,6 +288,23 @@ spec:
     group: inference.networking.x-k8s.io
     kind: InferencePool
     name: llama-3-2-3b-instruct-inference-pool
+---
+kind: HealthCheckPolicy
+apiVersion: networking.gke.io/v1
+metadata:
+  name: llama-3-2-3b-instruct-health-check-policy
+  namespace: default
+spec:
+  targetRef:
+    group: "inference.networking.x-k8s.io"
+    kind: InferencePool
+    name: llama-3-2-3b-instruct-inference-pool
+  default:
+    config:
+      type: HTTP
+      httpHealthCheck:
+          requestPath: /health
+          port: 8000
 EOF
 ```
 
