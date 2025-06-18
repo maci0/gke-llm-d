@@ -203,8 +203,8 @@ sampleApplication:
   enabled: true
   baseConfigMapRefName: basic-gpu-preset
   model:
-    modelArtifactURI: hf://meta-llama/Llama-3.2-3B-Instruct
-    modelName: "llama-3.2-3B-Instruct"
+    modelArtifactURI: hf://meta-llama/Llama-3.2-1B-Instruct
+    modelName: "llama-3.2-1B-Instruct"
 gateway:
   enabled: false
 modelservice:
@@ -236,7 +236,7 @@ kubectl apply -f - <<EOF
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: llama-3-2-3b-instruct-gateway
+  name: llama-3-2-1b-instruct-gateway
 spec:
   gatewayClassName: gke-l7-rilb
   listeners:
@@ -247,24 +247,24 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: llama-3-2-3b-instruct-route
+  name: llama-3-2-1b-instruct-route
 spec:
   parentRefs:
-  - name: llama-3-2-3b-instruct-gateway
+  - name: llama-3-2-1b-instruct-gateway
   rules:
   - matches:
     - path:
         type: PathPrefix
         value: /
     backendRefs:
-    - name: llama-3-2-3b-instruct-inference-pool
+    - name: llama-3-2-1b-instruct-inference-pool
       group: inference.networking.x-k8s.io
       kind: InferencePool
 ---
 apiVersion: networking.gke.io/v1
 kind: GCPBackendPolicy
 metadata:
-  name: llama-3-2-3b-instruct-backend-policy
+  name: llama-3-2-1b-instruct-backend-policy
   namespace: default
 spec:
   default:
@@ -274,18 +274,18 @@ spec:
   targetRef:
     group: inference.networking.x-k8s.io
     kind: InferencePool
-    name: llama-3-2-3b-instruct-inference-pool
+    name: llama-3-2-1b-instruct-inference-pool
 ---
 kind: HealthCheckPolicy
 apiVersion: networking.gke.io/v1
 metadata:
-  name: llama-3-2-3b-instruct-health-check-policy
+  name: llama-3-2-1b-instruct-health-check-policy
   namespace: default
 spec:
   targetRef:
     group: "inference.networking.x-k8s.io"
     kind: InferencePool
-    name: llama-3-2-3b-instruct-inference-pool
+    name: llama-3-2-1b-instruct-inference-pool
   default:
     config:
       type: HTTP
