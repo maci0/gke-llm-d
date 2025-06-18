@@ -276,6 +276,22 @@ spec:
     - name: meta-llama-llama-3-2-3b-instruct-inference-pool
       group: inference.networking.x-k8s.io
       kind: InferencePool
+---
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: meta-llama-llama-3-2-3b-instruct-backend-policy
+  namespace: default
+spec:
+  default:
+    logging:
+      enabled: true
+    timeoutSec: 300
+  targetRef:
+    group: inference.networking.x-k8s.io
+    kind: InferencePool
+    name: meta-llama-llama-3-2-3b-instruct-inference-pool
+EOF
 ```
 
 ## install example workload
