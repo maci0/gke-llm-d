@@ -214,6 +214,22 @@ EOF
 
 ```
 
+## deploy llm-d sample app
+```bash
+cat <<'EOF' > llm-d-sample.yaml
+sampleApplication:
+  enabled: true
+  baseConfigMapRefName: basic-gpu-preset
+  model:
+    modelArtifactURI: hf://meta-llama/Llama-3.2-3B-Instruct
+    modelName: "meta-llama/Llama-3.2-3B-Instruct"
+gateway:
+  enabled: false
+EOF
+
+```
+
+
 ## Create huggingface token secret
 ```bash
 kubectl create secret generic llm-d-hf-token \
@@ -224,7 +240,9 @@ kubectl create secret generic llm-d-hf-token \
 
 ## Install llm-d
 ```bash
-helm install llm-d llm-d/llm-d -f llm-d-gke.yaml 
+helm install llm-d llm-d/llm-d -f llm-d-gke.yaml
+helm install llm-d-sample llm-d/llm-d -f llm-d-sample.yaml 
+
 ```
 
 ## install example workload
