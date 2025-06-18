@@ -313,7 +313,9 @@ kubectl patch ModelService llama-3-2-3b-instruct --type='json' -p='[{"op": "add"
 kubectl patch ModelService llama-3-2-3b-instruct --type='json' -p='[{"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "PATH", "value": "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin"}}, {"op": "add", "path": "/spec/prefill/containers/0/env/-", "value": {"name": "LD_LIBRARY_PATH", "value": "/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib"}}]'
 ```
 
-*Note on L4 GPUs*: You may need to adjust the `ModelService` to optimize for the L4 GPU architecture.
+
+### Optimize for the L4 GPU architecture ( Optional ) *
+You may need to adjust the `ModelService` to optimize for the L4 GPU architecture.
 
 To prevent out-of-memory errors, you can add arguments to the vllm startup command. For example, to set the GPU memory utilization:
 ```bash
