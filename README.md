@@ -522,6 +522,26 @@ spec:
 EOF
 ```
 
+## Benchmarking
+
+### Install vllm python package
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install vllm
+git clone --depth=1 https://github.com/vllm-project/vllm.git
+```
+
+### Run benchmark
+```bash
+export MODEL_NAME=qwen3-0-6b
+export VLLM_HOST=$(kubectl get gateway/${MODEL_NAME}-gateway -o jsonpath='{.status.addresses[0].value}')
+export VLLM_PORT=80 # Use 80 for HTTP
+python3 vllm/benchmarks/benchmark_serving.py --backend vllm --host ${VLLM_HOST} --port ${VLLM_PORT} \
+                                        --model ${MODEL_NAME} --dataset-name random --random-input-len 2048 --random-output-len 128 \
+                                        --num-prompts 1000 --seed 42
+```
+
 ## TODO
 * GMP Monitoring
 * Helm integration for `HealthCheckPolicy`, `Gateway`, `GCPBackendPolicy`, `HTTPRoute`
