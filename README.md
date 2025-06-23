@@ -375,13 +375,13 @@ PORT=80 # Use 80 for HTTP
 
 curl -i -X POST ${IP}:${PORT}/v1/completions \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer $(gcloud auth print-access-token)' \
--d '{
-    "model": "${MODEL_NAME}",
-    "prompt": "Say something",
-    "max_tokens": 8124,
-    "temperature": "0.5"
-}'
+-H "Authorization: Bearer $(gcloud auth print-access-token)" \
+-d "{
+    \"model\": \"${MODEL_NAME}\",
+    \"prompt\": \"Say something\",
+    \"max_tokens\": 8124,
+    \"temperature\": \"0.5\"
+}"
 ```
 
 ## 11. Cleanup
