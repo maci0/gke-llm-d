@@ -403,7 +403,7 @@ gcloud container clusters delete "$CLUSTER_NAME" --region "$REGION"
 This is full example how to add another ModelService
 ```yaml
 export SERVED_MODEL_NAME=qwen3-0-6b
-EXPORT MODEL="Qwen/Qwen3-0.6B"
+export MODEL="Qwen/Qwen3-0.6B"
 export MODEL_URI="hf://${MODEL}"
 
 kubectl apply -f - <<EOF
