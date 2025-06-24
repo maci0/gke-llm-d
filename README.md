@@ -402,19 +402,23 @@ gcloud container clusters delete "$CLUSTER_NAME" --region "$REGION"
 ## Add another ModelService
 This is full example how to add another ModelService
 ```yaml
+export SERVED_MODEL_NAME=qwen3-0-6b
+EXPORT MODEL="Qwen/Qwen3-0.6B"
+export MODEL_URI="hf://${MODEL}"
+
 kubectl apply -f - <<EOF
 apiVersion: llm-d.ai/v1alpha1
 kind: ModelService
 metadata:
-  name: qwen3-0-6b
+  name: ${SERVED_MODEL_NAME}
 spec:
   modelArtifacts:
-    uri: hf://Qwen/Qwen3-0.6B
+    uri: ${MODEL_URI}
   decoupleScaling: false
   baseConfigMapRef:
     name: basic-gpu-preset
   routing:
-    modelName: qwen3-0-6b
+    modelName: ${SERVED_MODEL_NAME}
   decode:
     replicas: 1
     containers:
@@ -426,7 +430,7 @@ spec:
           nvidia.com/gpu: "1"
       args:
       - "--served-model-name"
-      - "qwen3-0-6b"
+      - "${SERVED_MODEL_NAME}"
       env:
       - name: HF_TOKEN
         valueFrom:
@@ -448,7 +452,7 @@ spec:
           nvidia.com/gpu: "1"
       args:
       - "--served-model-name"
-      - "qwen3-0-6b"
+      - "${SERVED_MODEL_NAME}"
       env:
       - name: HF_TOKEN
         valueFrom:
@@ -463,7 +467,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: qwen3-0-6b-gateway
+  name: ${SERVED_MODEL_NAME}-gateway
 spec:
   gatewayClassName: gke-l7-rilb
   listeners:
@@ -474,24 +478,24 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: qwen3-0-6b-route
+  name: ${SERVED_MODEL_NAME}-route
 spec:
   parentRefs:
-  - name: qwen3-0-6b-gateway
+  - name: ${SERVED_MODEL_NAME}-gateway
   rules:
   - matches:
     - path:
         type: PathPrefix
         value: /
     backendRefs:
-    - name: qwen3-0-6b-inference-pool
+    - name: ${SERVED_MODEL_NAME}-inference-pool
       group: inference.networking.x-k8s.io
       kind: InferencePool
 ---
 apiVersion: networking.gke.io/v1
 kind: GCPBackendPolicy
 metadata:
-  name: qwen3-0-6b-backend-policy
+  name: ${SERVED_MODEL_NAME}-backend-policy
   namespace: default
 spec:
   default:
@@ -501,18 +505,18 @@ spec:
   targetRef:
     group: inference.networking.x-k8s.io
     kind: InferencePool
-    name: qwen3-0-6b-inference-pool
+    name: ${SERVED_MODEL_NAME}-inference-pool
 ---
 kind: HealthCheckPolicy
 apiVersion: networking.gke.io/v1
 metadata:
-  name: qwen3-0-6b-health-check-policy
+  name: ${SERVED_MODEL_NAME}-health-check-policy
   namespace: default
 spec:
   targetRef:
     group: "inference.networking.x-k8s.io"
     kind: InferencePool
-    name: qwen3-0-6b-inference-pool
+    name: ${SERVED_MODEL_NAME}-inference-pool
   default:
     config:
       type: HTTP
