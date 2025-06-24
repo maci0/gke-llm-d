@@ -538,6 +538,8 @@ git clone --depth=1 https://github.com/vllm-project/vllm.git
 
 ### Run benchmark
 ```bash
+source venv/bin/activate
+
 export MODEL="Qwen/Qwen3-0.6B"
 export SERVED_MODEL_NAME=qwen3-0-6b
 export VLLM_HOST=$(kubectl get gateway/${SERVED_MODEL_NAME}-gateway -o jsonpath='{.status.addresses[0].value}')
