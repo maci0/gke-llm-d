@@ -551,6 +551,7 @@ python3 vllm/benchmarks/benchmark_serving.py --backend vllm --host ${VLLM_HOST} 
 ```
 
 ## TODO
+* use https://github.com/kubernetes-sigs/inference-perf for benchmarking
 * GMP Monitoring
 * Helm integration for `HealthCheckPolicy`, `Gateway`, `GCPBackendPolicy`, `HTTPRoute`
 
