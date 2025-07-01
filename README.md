@@ -416,7 +416,7 @@ spec:
     uri: ${MODEL_URI}
   decoupleScaling: false
   baseConfigMapRef:
-    name: basic-gpu-preset
+    name: basic-gpu-with-nixl-preset
   routing:
     modelName: ${SERVED_MODEL_NAME}
   decode:
