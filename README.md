@@ -1,13 +1,93 @@
 # Deploying a Large Language Model with llm-d on Google Kubernetes Engine (GKE)
-This guide provides step-by-step instructions for deploying a large language model using the `llm-d` architecture on a GKE cluster with GPU acceleration
 
-## 1. Prerequisites
+This guide provides step-by-step instructions for deploying a large language model using the `llm-d` architecture on a GKE cluster with GPU acceleration.
+
+## Table of Contents
+
+- [TL;DR - Quick Start](#tldr---quick-start-with-automation-scripts)
+- [Prerequisites](#prerequisites)
+- [Architecture Overview](#architecture-overview)
+- [Manual Deployment Guide](#manual-deployment-guide)
+- [Advanced Usage](#advanced-usage)
+- [Troubleshooting](#troubleshooting)
+
+## TL;DR - Quick Start with Automation Scripts
+
+🚀 **Want to deploy quickly?** Use our automated scripts:
+
+```bash
+# 1. Setup environment (edit .env file with your tokens)
+./scripts/setup-env.sh
+
+# 2. Complete automated deployment
+./scripts/deploy-all.sh
+
+# 3. Test your deployment
+./scripts/test-deployment.sh
+
+# 4. Clean up when done
+./scripts/cleanup.sh
+```
+
+📖 **For detailed script documentation, see [scripts/README.md](scripts/README.md)**
+
+### Prerequisites for Quick Start
+
+- **Google Cloud SDK** (gcloud) - [Install Guide](https://cloud.google.com/sdk/docs/install)
+- **kubectl** - [Install Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- **Helm** - [Install Guide](https://helm.sh/docs/intro/install/)
+- **Hugging Face Token** - Get from [Hugging Face Settings](https://huggingface.co/settings/tokens)
+- **Model Access** - Request access to [meta-llama/Llama-3.2-1B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct)
+
+---
+
+## Architecture Overview
+
+This deployment creates:
+- **GKE Cluster** with GPU-enabled nodes (NVIDIA L4)
+- **LLM-D Stack**: Kubernetes-native distributed inference serving platform
+  - **Model Service**: Manages model lifecycle and inference workloads
+  - **Gateway**: Routes requests and provides load balancing
+  - **Redis**: Handles caching and session management
+  - **vLLM**: High-performance inference engine with prefill/decode separation
+---
+
+## Manual Deployment Guide
+
+The sections below provide detailed manual instructions for understanding each step:
+
+## Prerequisites
+
 Before you begin, ensure you have the following:
-* Google Cloud SDK (gcloud): Installed and authenticated.
-* kubectl: The Kubernetes command-line tool.
-* Helm: The package manager for Kubernetes.
-* Hugging Face Account: You will need an account and an access token.
-* Model Access: Request access to the meta-llama/Llama-3.2-1B-Instruct model on Hugging Face.
+
+### Required Tools
+- **Google Cloud SDK (gcloud)** - [Install Guide](https://cloud.google.com/sdk/docs/install)
+  - Must be authenticated: `gcloud auth login`
+  - Must have required permissions (see [IAM Requirements](#iam-requirements))
+- **kubectl** - [Install Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- **Helm** - [Install Guide](https://helm.sh/docs/intro/install/)
+
+### Required Accounts & Access
+- **Google Cloud Project** with billing enabled
+- **Hugging Face Account** with access token - [Get Token](https://huggingface.co/settings/tokens)
+- **Model Access** - Request access to [meta-llama/Llama-3.2-1B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct)
+
+### IAM Requirements
+
+Your Google Cloud user/service account needs the following roles:
+- `roles/container.admin` (GKE administration)
+- `roles/compute.admin` (VM and network management)
+- `roles/iam.serviceAccountUser` (Service account usage)
+- `roles/serviceusage.serviceUsageAdmin` (Enable APIs)
+
+### Resource Quotas
+
+Ensure your project has sufficient quotas:
+- **GPU Quota**: At least 1 NVIDIA L4 GPU in your chosen region (can scale up to 4)
+- **CPU Quota**: At least 16 vCPUs
+- **Persistent Disk**: At least 200GB SSD
+
+> **💡 Tip**: Check quotas in [GCP Console](https://console.cloud.google.com/iam-admin/quotas)
 
 ## 2. Environment Configuration
 First, set up the environment variables that will be used throughout the deployment process.
@@ -32,12 +112,14 @@ export MIN_NODES=0
 export MAX_NODES=4
 export INITIAL_NODES=1
 ```
-Also set your huggingface token.
+**Important**: Set your Hugging Face token:
 ```bash
 # --- Hugging Face Token ---
 # Replace with your actual Hugging Face token
 export HF_TOKEN="<INSERT YOUR TOKEN HERE>"
 ```
+
+> **⚠️ Security Note**: Never commit your actual token to version control. The automated scripts create a `.env` file which is gitignored.
 
 ## 3. Infrastructure Setup
 Next, create the GKE cluster and a dedicated GPU node pool.
@@ -93,16 +175,17 @@ helm repo update
 ```
 
 ## 5. Kubernetes Configuration
-### Create Hugging Face Token Secret ( Optional )
+
+### Create Hugging Face Token Secret
+
 Create a Kubernetes secret to securely store your Hugging Face token. This will be used by `llm-d` to download the model.
-You can skip this step if you're using the SampleApplication chart from the `llm-d-deployer` repo.
+
 ```bash
 kubectl create secret generic llm-d-hf-token \
     --from-literal="HF_TOKEN=${HF_TOKEN}"
 ```
 
-
-## Set up GKE Inference Gateway CRD and RBAC
+### Set up GKE Inference Gateway CRD and RBAC
 Apply the necessary manifests for the GKE Inference Gateway and configure the required Role-Based Access Control (RBAC) for metrics scraping.
 ```bash
 # Install the Gateway API Inference Extension
@@ -166,7 +249,7 @@ EOF
 Create the configuration files for the llm-d core components and the sample application.
 
 ### Configure Core llm-d Services
-This configuration enables the necessary backend services for `llm-d`, such as Redis and the model service.
+This configuration enables the necessary backend services for `llm-d`, including Redis for caching and the inference gateway for routing.
 
 ```bash
 cat <<EOF > llm-d-gke.yaml
@@ -174,7 +257,7 @@ sampleApplication:
   enabled: false
 gateway:
   enabled: true
-  gatewayClassName: gke-l7-rilb	
+  gatewayClassName: gke-l7-rilb
 redis:
   enabled: true
 modelservice:
@@ -245,12 +328,9 @@ helm install llm-d llm-d/llm-d -f llm-d-gke.yaml
 helm install llm-d-sample llm-d/llm-d -f llm-d-sample.yaml 
 ```
 
-## 8. Expose the Model with a Gateway
-Create a Kubernetes Gateway and HTTPRoute to expose the deployed model to receive inference requests. This also includes health check and backend policies.
-As of llm-d deployer version 1.0.21 this should not be needed any more when using the deployer to deploy the sample services.
+## 8. Model Service Adjustments (Critical for GKE)
 
-
-## 9. Model Service Adjustments
+> **⚠️ Important**: This step is required for GKE compatibility. Until https://github.com/llm-d/llm-d/pull/123 is merged
 The `llm-d` image used by the default configuration does not work out of the box on GKE.
 This can be fixed by adjusting the `PATH` and `LD_LIBRARY_PATH` variables in the `ModelService`
 
@@ -277,35 +357,56 @@ kubectl patch ModelService ${MODEL_NAME} --type='json' -p='[{"op": "add", "path"
 
 
 
-## 10. Testing the Deployment
+## 9. Testing the Deployment
+
 Once the deployment is complete, you can test it by sending a completion request.
 
-### Using the included test script
+### Verify Deployment Status
+
+First, check that all components are running:
+
 ```bash
-./test-request.sh -n default
-Namespace: default
-Model ID:  none; will be discover from first entry in /v1/models
+# Check pods
+kubectl get pods -l app.kubernetes.io/name=llm-d
 
-1 -> Fetching available models from the decode pod at 10.108.6.10…
-If you don't see a command prompt, try pressing enter.
-warning: couldn't attach to pod/curl-1236, falling back to streaming logs: Internal error occurred: unable to upgrade connection: container curl-1236 not found in pod curl-1236_default
-{"object":"list","data":[{"id":"llama-3-2-1b-instruct","object":"model","created":1750258028,"owned_by":"vllm","root":"meta-llama/Llama-3.2-1B-Instruct","parent":null,"max_model_len":131072,"permission":[{"id":"modelperm-c2de4561c7884e35a7495d19a4b49564","object":"model_permission","created":1750258028,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-1236" deleted
+# Check ModelService
+kubectl get modelservices
 
-Discovered model to use: llama-3-2-1b-instruct
+# Check Gateway
+kubectl get gateways
+```
 
-2 -> Sending a completion request to the decode pod at 10.108.6.10…
-If you don't see a command prompt, try pressing enter.
-warning: couldn't attach to pod/curl-9107, falling back to streaming logs: Internal error occurred: unable to upgrade connection: container curl-9107 not found in pod curl-9107_default
-{"id":"cmpl-c8fc134073164b6c99ed480396491b35","object":"text_completion","created":1750258032,"model":"llama-3-2-1b-instruct","choices":[{"index":0,"text":" I'm a curious person, and I'm interested in learning more about the world","logprobs":null,"finish_reason":"length","stop_reason":null,"prompt_logprobs":null}],"usage":{"prompt_tokens":5,"total_tokens":21,"completion_tokens":16,"prompt_tokens_details":null},"kv_transfer_params":null}pod "curl-9107" deleted
+### Test with Automated Script
 
-3 -> Fetching available models via the gateway at 10.128.0.248…
-{"object":"list","data":[{"id":"llama-3-2-1b-instruct","object":"model","created":1750258037,"owned_by":"vllm","root":"meta-llama/Llama-3.2-1B-Instruct","parent":null,"max_model_len":131072,"permission":[{"id":"modelperm-8267c8382315434ca5267e04c21997c1","object":"model_permission","created":1750258037,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]}]}pod "curl-3122" deleted
+```bash
+# Use the automated test script
+./scripts/test-deployment.sh
+```
 
+This will test:
+1. Direct pod access to the model
+2. Gateway access (if configured)
+3. Model availability and inference
 
-4 -> Sending a completion request via the gateway at 10.128.0.248 with model 'llama-3-2-1b-instruct'…
-{"choices":[{"finish_reason":"length","index":0,"logprobs":null,"prompt_logprobs":null,"stop_reason":null,"text":" I can help you find the answer.\nI am the one you're looking for"}],"created":1750258041,"id":"cmpl-55aa6f37c3c34594ae223ed66ad5a0fb","kv_transfer_params":null,"model":"llama-3-2-1b-instruct","object":"text_completion","usage":{"completion_tokens":16,"prompt_tokens":5,"prompt_tokens_details":null,"total_tokens":21}}pod "curl-7029" deleted
+### Example Test Output
 
-All tests complete.
+```json
+{
+  "choices": [
+    {
+      "finish_reason": "length",
+      "index": 0,
+      "text": " I'm a curious person, and I'm interested in learning more about the world"
+    }
+  ],
+  "model": "llama-3-2-1b-instruct",
+  "object": "text_completion",
+  "usage": {
+    "completion_tokens": 16,
+    "prompt_tokens": 5,
+    "total_tokens": 21
+  }
+}
 ```
 
 ### Manual testing
@@ -325,23 +426,42 @@ curl -i -X POST ${IP}:${PORT}/v1/completions \
 }"
 ```
 
-## 11. Cleanup
-To remove all the resources created in this guide
+## 10. Cleanup
+
+### Option 1: Use Automated Cleanup
+
 ```bash
+# Interactive cleanup with options
+./scripts/cleanup.sh
+
+# Or specific cleanup commands:
+./scripts/cleanup.sh k8s      # Remove K8s resources only
+./scripts/cleanup.sh cluster  # Delete entire cluster
+```
+
+### Option 2: Manual Cleanup
+
+```bash
+# Remove Kubernetes resources
 kubectl delete HealthCheckPolicy,Gateway,GCPBackendPolicy,HTTPRoute --all
 helm uninstall llm-d-sample
 helm uninstall llm-d
-```
 
-Or simply delete the GKE cluster.
-```bash
+# Delete the entire cluster
 gcloud container clusters delete "$CLUSTER_NAME" --region "$REGION"
 ```
 
+> **💡 Tip**: The automated cleanup script provides interactive options and safety checks.
 
 
-## Manually creating another ModelService
-This is full example how to add another ModelService
+
+---
+
+## Advanced Usage
+
+### Adding Additional Models
+
+This example shows how to manually create another ModelService:
 ```yaml
 export SERVED_MODEL_NAME=qwen3-0-6b
 export MODEL="Qwen/Qwen3-0.6B"
@@ -480,9 +600,38 @@ python3 vllm/benchmarks/benchmark_serving.py --backend vllm --host ${VLLM_HOST} 
                                         --num-prompts 1000 --seed 42
 ```
 
-## TODO
-* use https://github.com/kubernetes-sigs/inference-perf or https://github.com/AI-Hypercomputer/inference-benchmark for benchmarking
-* GMP Monitoring
+### Monitoring
+
+Currently, the deployment includes Prometheus metrics from the llm-d components, but **Google Cloud Monitoring (GMP) integration is not yet implemented or tested**.
+
+**Current Status:**
+- ✅ **Prometheus metrics** are available from vLLM and llm-d components
+- ❌ **Google Cloud Monitoring** integration is pending implementation
+- ❌ **Managed Prometheus** integration needs testing
+
+**Available Metrics:**
+- vLLM inference metrics (requests, latency, throughput)
+- Model service health metrics
+- Gateway routing and performance metrics
+- Redis cache metrics (if enabled)
+
+**TODO - Future Improvements:**
+- Integrate with Google Managed Prometheus (GMP)
+- Create Grafana dashboards for visualization
+- Set up alerting policies
+- Test ClusterPodMonitoring configuration
+
+**Temporary Monitoring:**
+You can access raw metrics directly from the pods:
+```bash
+# Get metrics from vLLM pods
+kubectl port-forward <vllm-pod-name> 8000:8000
+curl http://localhost:8000/metrics
+```
+
+**Reference: ClusterPodMonitoring Configuration (Untested)**
+
+The following configuration is provided as a reference for future GMP integration:
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -507,3 +656,73 @@ spec:
           key: token
 EOF
 ```
+
+> **⚠️ Note**: This configuration has not been tested and may require adjustments for proper GMP integration.
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Out of Memory Errors
+```bash
+# Reduce GPU memory utilization
+kubectl patch ModelService ${MODEL_NAME} --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/args/-", "value": "--gpu-memory-utilization=0.8"}]'
+
+# Or reduce max model length
+kubectl patch ModelService ${MODEL_NAME} --type='json' -p='[{"op": "add", "path": "/spec/decode/containers/0/args/-", "value": "--max-model-len=32768"}]'
+```
+
+#### 2. Pod Stuck in Pending State
+```bash
+# Check GPU node availability
+kubectl get nodes -l cloud.google.com/gke-accelerator=nvidia-l4
+
+# Check pod events
+kubectl describe pod <pod-name>
+```
+
+#### 3. Authentication Issues
+```bash
+# Verify HF token secret
+kubectl get secret llm-d-hf-token -o yaml
+
+# Check model access permissions
+kubectl logs <model-pod-name> -c vllm
+```
+
+#### 4. Network Issues
+```bash
+# Test internal connectivity
+kubectl run test-curl --rm -i --restart=Never --image=curlimages/curl:latest -- curl -s http://<service-name>:8000/health
+```
+
+### Getting Help
+
+- **View logs**: `kubectl logs -l app.kubernetes.io/name=llm-d -f`
+- **Check events**: `kubectl get events --sort-by=.metadata.creationTimestamp`
+- **Debug pods**: `kubectl describe pod <pod-name>`
+- **LLM-D GitHub**: [https://github.com/llm-d/llm-d](https://github.com/llm-d/llm-d)
+- **LLM-D Deployer**: [https://github.com/llm-d/llm-d-deployer](https://github.com/llm-d/llm-d-deployer)
+
+### Performance Optimization
+
+1. **GPU Utilization**: Monitor with `nvidia-smi` in pods
+2. **Memory Usage**: Adjust `--gpu-memory-utilization` parameter
+3. **Batch Size**: Tune `--max-num-seqs` for throughput
+4. **Context Length**: Balance `--max-model-len` vs memory usage
+
+---
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Test your changes thoroughly
+4. Submit a pull request with detailed description
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
