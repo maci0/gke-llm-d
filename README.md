@@ -173,7 +173,8 @@ cat <<EOF > llm-d-gke.yaml
 sampleApplication:
   enabled: false
 gateway:
-  enabled: false	
+  enabled: true
+  gatewayClassName: gke-l7-rilb	
 redis:
   enabled: true
 modelservice:
@@ -246,69 +247,9 @@ helm install llm-d-sample llm-d/llm-d -f llm-d-sample.yaml
 
 ## 8. Expose the Model with a Gateway
 Create a Kubernetes Gateway and HTTPRoute to expose the deployed model to receive inference requests. This also includes health check and backend policies.
-```yaml
-kubectl apply -f - <<EOF
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: ${MODEL_NAME}-gateway
-spec:
-  gatewayClassName: gke-l7-rilb
-  listeners:
-    - protocol: HTTP # Or HTTPS for production
-      port: 80 # Or 443 for HTTPS
-      name: http
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: ${MODEL_NAME}-route
-spec:
-  parentRefs:
-  - name: ${MODEL_NAME}-gateway
-  rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /
-    backendRefs:
-    - name: ${MODEL_NAME}-inference-pool
-      group: inference.networking.x-k8s.io
-      kind: InferencePool
----
-apiVersion: networking.gke.io/v1
-kind: GCPBackendPolicy
-metadata:
-  name: ${MODEL_NAME}-backend-policy
-  namespace: default
-spec:
-  default:
-    logging:
-      enabled: true
-    timeoutSec: 300
-  targetRef:
-    group: inference.networking.x-k8s.io
-    kind: InferencePool
-    name: ${MODEL_NAME}-inference-pool
----
-kind: HealthCheckPolicy
-apiVersion: networking.gke.io/v1
-metadata:
-  name: ${MODEL_NAME}-health-check-policy
-  namespace: default
-spec:
-  targetRef:
-    group: "inference.networking.x-k8s.io"
-    kind: InferencePool
-    name: ${MODEL_NAME}-inference-pool
-  default:
-    config:
-      type: HTTP
-      httpHealthCheck:
-          requestPath: /health
-          port: 8000
-EOF
-```
+As of llm-d deployer version 1.0.21 this should not be needed any more when using the deployer to deploy the sample services.
+
+
 ## 9. Model Service Adjustments
 The `llm-d` image used by the default configuration does not work out of the box on GKE.
 This can be fixed by adjusting the `PATH` and `LD_LIBRARY_PATH` variables in the `ModelService`
@@ -399,7 +340,7 @@ gcloud container clusters delete "$CLUSTER_NAME" --region "$REGION"
 
 
 
-## Add another ModelService
+## Manually creating another ModelService
 This is full example how to add another ModelService
 ```yaml
 export SERVED_MODEL_NAME=qwen3-0-6b
@@ -463,17 +404,6 @@ spec:
         value: /usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workspace/vllm/.vllm/bin:/root/.local/bin:/usr/local/ompi/bin
       - name: LD_LIBRARY_PATH
         value: /usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nixl/lib/x86_64-linux-gnu/:/usr/local/ompi/lib:/usr/lib:/usr/local/lib
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: ${SERVED_MODEL_NAME}-gateway
-spec:
-  gatewayClassName: gke-l7-rilb
-  listeners:
-    - protocol: HTTP # Or HTTPS for production
-      port: 80 # Or 443 for HTTPS
-      name: http
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -551,9 +481,8 @@ python3 vllm/benchmarks/benchmark_serving.py --backend vllm --host ${VLLM_HOST} 
 ```
 
 ## TODO
-* use https://github.com/kubernetes-sigs/inference-perf for benchmarking
+* use https://github.com/kubernetes-sigs/inference-perf or https://github.com/AI-Hypercomputer/inference-benchmark for benchmarking
 * GMP Monitoring
-* Helm integration for `HealthCheckPolicy`, `Gateway`, `GCPBackendPolicy`, `HTTPRoute`
 
 ```yaml
 kubectl apply -f - <<EOF
