@@ -313,7 +313,8 @@ sampleApplication:
     modelArtifactURI: "hf://${MODEL_ID}"
     modelName: "${MODEL_NAME}"
 gateway:
-  enabled: false
+  enabled: true
+  gatewayClassName: gke-l7-rilb
 modelservice:
   enabled: false
 redis:
