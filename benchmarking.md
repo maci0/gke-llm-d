@@ -58,10 +58,10 @@ api:
   type: chat
 server:
   type: vllm
-  model_name: llama-3-2-1b-instruct
+  model_name: meta-llama/Llama-3.2-1B-Instruct
   base_url: http://<your-gateway-ip>
 tokenizer:
-  pretrained_model_name_or_path: HuggingFaceTB/SmolLM2-135M-Instruct
+  pretrained_model_name_or_path: meta-llama/Llama-3.2-1B-Instruct
 ```
 
 **Important:** Replace `<your-gateway-ip>` with the actual IP address of your gateway. You can get it by running:
