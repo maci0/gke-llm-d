@@ -59,7 +59,7 @@ api:
 server:
   type: vllm
   model_name: llama-3-2-1b-instruct
-  base_url: http://0.0.0.0:8000
+  base_url: http://<your-gateway-ip>
 tokenizer:
   pretrained_model_name_or_path: HuggingFaceTB/SmolLM2-135M-Instruct
 ```
