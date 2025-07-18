@@ -42,38 +42,26 @@ uv pip install .
 ## 3. Running the Benchmark
 
 ### Create a Configuration File
-
 The `inference-perf` tool uses a YAML configuration file to define the benchmark parameters. Create a file named `config.yml` with the following content:
 
 ```yaml
-# config.yml
+#config.yml
 
-workload:
-  # The API to benchmark
-  api: openai
-  # The model to use
-  model: llama-3-2-1b-instruct
-  # The dataset to use for prompts
-  dataset:
-    # Use a synthetic dataset
-    type: synthetic
-    # Number of prompts to generate
-    num_prompts: 1000
-    # Length of the generated prompts
-    input_tokens: 2048
-    # Length of the generated responses
-    output_tokens: 128
-
-runner:
-  # The type of runner to use
+data:
+  type: shareGPT
+load:
+  type: constant
+  stages:
+  - rate: 1
+    duration: 30
+api: 
+  type: chat
+server:
   type: vllm
-  # The host of the vLLM server
-  host: "<your-gateway-ip>"
-  # The port of the vLLM server
-  port: 80
-
-# The output path for the results
-output_path: /tmp/results.json
+  model_name: llama-3-2-1b-instruct
+  base_url: http://0.0.0.0:8000
+tokenizer:
+  pretrained_model_name_or_path: HuggingFaceTB/SmolLM2-135M-Instruct
 ```
 
 **Important:** Replace `<your-gateway-ip>` with the actual IP address of your gateway. You can get it by running:
