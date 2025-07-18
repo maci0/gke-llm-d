@@ -88,6 +88,7 @@ kubectl get gateway/${MODEL_NAME}-gateway -o jsonpath='{.status.addresses[0].val
 Now you can run the `inference-perf` command with your configuration file:
 
 ```bash
+export HF_TOKEN=<your token>
 inference-perf --config_file config.yml
 ```
 
