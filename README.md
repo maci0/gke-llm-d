@@ -102,6 +102,7 @@ export CLUSTER_NAME="mwy-llm-d"
 
 # --- GKE Node Pool Settings ---
 export NODE_LOCATIONS="us-central1-a"
+export ZONE="$NODE_LOCATIONS"
 export NODEPOOL_NAME="mwy-llm-d-a3u"
 export MACHINE_TYPE="a3-ultragpu-8g"
 export GPU_TYPE="nvidia-h200-141gb"
