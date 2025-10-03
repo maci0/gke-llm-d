@@ -107,8 +107,8 @@ export MACHINE_TYPE="a3-ultragpu-8g"
 export GPU_TYPE="nvidia-h200-141gb"
 export GPU_COUNT=1 # Number of GPUs to attach per VM
 export GPU_DRIVER_VERSION="latest" # Use "latest" or a specific version
-export GVNIC_NETWORK_PREFIX="a3u-gvnic"
-export RDMA_NETWORK_PREFIX="a3u-rdma"
+export GVNIC_NETWORK_PREFIX="$NODEPOOL_NAME-gvnic"
+export RDMA_NETWORK_PREFIX="$NODEPOOL_NAME-rdma"
 
 # --- Nodepool Autoscaling Settings ---
 export MIN_NODES=0
