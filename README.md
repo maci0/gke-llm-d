@@ -94,6 +94,7 @@ First, set up the environment variables that will be used throughout the deploym
 ```bash
 # --- Google Cloud Platform Settings ---
 export PROJECT_ID="gpu-launchpad-playground"
+export PROJECT="$PROJECT_ID"
 export REGION="us-central1"
 
 # --- GKE Cluster Settings ---
@@ -123,6 +124,48 @@ export HF_TOKEN="<INSERT YOUR TOKEN HERE>"
 
 ## 3. Infrastructure Setup
 Next, create the GKE cluster and a dedicated GPU node pool.
+
+### Create the additional RDMA networks
+Reference: https://cloud.google.com/ai-hypercomputer/docs/create/gke-ai-hypercompute
+
+```bash
+# Create a VPC for the additional Google Titanium CPU NIC
+gcloud compute --project=${PROJECT?} \
+  networks create \
+  ${GVNIC_NETWORK_PREFIX?}-net \
+  --subnet-mode=custom
+
+gcloud compute --project=${PROJECT?} \
+  networks subnets create \
+  ${GVNIC_NETWORK_PREFIX?}-sub \
+  --network=${GVNIC_NETWORK_PREFIX?}-net \
+  --region=${REGION?} \
+  --range=192.168.0.0/24
+
+gcloud compute --project=${PROJECT?} \
+  firewall-rules create \
+  ${GVNIC_NETWORK_PREFIX?}-internal \
+  --network=${GVNIC_NETWORK_PREFIX?}-net \
+  --action=ALLOW \
+  --rules=tcp:0-65535,udp:0-65535,icmp \
+  --source-ranges=192.168.0.0/16
+
+# Create HPC VPC for the RDMA NICs with 8 subnets.
+gcloud beta compute --project=${PROJECT?} \
+  networks create ${RDMA_NETWORK_PREFIX?}-net \
+  --network-profile=${ZONE?}-vpc-roce \
+  --subnet-mode=custom
+
+# Create subnets for the HPC VPC.
+for N in $(seq 0 7); do
+  gcloud compute --project=${PROJECT?} \
+    networks subnets create \
+    ${RDMA_NETWORK_PREFIX?}-sub-$N \
+    --network=${RDMA_NETWORK_PREFIX?}-net \
+    --region=${REGION?} \
+    --range=192.168.$((N+1)).0/24 &  # offset to avoid overlap with gvnics
+done
+```
 
 ### Create the GKE Cluster
 This command creates a standard GKE cluster that will host the control plane and other supporting services.
